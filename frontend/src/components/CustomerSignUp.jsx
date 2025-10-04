@@ -49,11 +49,12 @@ const Signup = ({ onSwitch, onModeChange, onSuccess, onNavigate }) => {
   const handleSubmit = async e => {
     e.preventDefault();
     if (!form.username.trim() ||
-        !form.customerID.trim() ||
         !form.phone.trim() ||
         !form.email.trim() ||
         !form.password.trim() ||
-        (role === 'customer' && !form.merchantID.trim())) {
+        (role === 'customer' && !form.customerID.trim()) ||
+        (role === 'merchant' && !form.merchantID.trim()) ||
+        (role === 'merchant' && !form.storeName.trim())) {
       toast.error('Please fill in all required fields.');
       return;
     }

@@ -5,12 +5,62 @@ const FreshnessAnalyzer = ({ onNavigate }) => {
   const [analysisResult, setAnalysisResult] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
+  // Random result data for demonstration
+  const getRandomResult = () => {
+    const results = [
+      {
+        freshness: Math.floor(Math.random() * 40) + 60, // 60-100%
+        status: 'Fresh',
+        recommendations: [
+          'Store in refrigerator to maintain freshness',
+          'Consume within 3-5 days',
+          'Check for any soft spots before consuming'
+        ]
+      },
+      {
+        freshness: Math.floor(Math.random() * 30) + 40, // 40-70%
+        status: 'Moderately Fresh',
+        recommendations: [
+          'Use within 1-2 days for best quality',
+          'Store in cool, dry place',
+          'Consider cooking to extend shelf life'
+        ]
+      },
+      {
+        freshness: Math.floor(Math.random() * 20) + 20, // 20-40%
+        status: 'Stale',
+        recommendations: [
+          'Use immediately or discard',
+          'Check for mold or discoloration',
+          'Consider composting if too old'
+        ]
+      },
+      {
+        freshness: Math.floor(Math.random() * 15) + 5, // 5-20%
+        status: 'Spoiled',
+        recommendations: [
+          'Do not consume',
+          'Discard immediately',
+          'Check other produce for contamination'
+        ]
+      }
+    ];
+    
+    return results[Math.floor(Math.random() * results.length)];
+  };
+
   const handleImageUpload = (event) => {
     const file = event.target.files[0];
     if (file) {
       const reader = new FileReader();
       reader.onload = (e) => {
         setSelectedImage(e.target.result);
+        // Automatically show random result when image is uploaded
+        setIsAnalyzing(true);
+        setTimeout(() => {
+          setAnalysisResult(getRandomResult());
+          setIsAnalyzing(false);
+        }, 1500);
       };
       reader.readAsDataURL(file);
     }
@@ -20,17 +70,9 @@ const FreshnessAnalyzer = ({ onNavigate }) => {
     if (!selectedImage) return;
     
     setIsAnalyzing(true);
-    // Simulate API call
+    // Simulate API call with random result
     setTimeout(() => {
-      setAnalysisResult({
-        freshness: 85,
-        status: 'Fresh',
-        recommendations: [
-          'Store in refrigerator to maintain freshness',
-          'Consume within 3-5 days',
-          'Check for any soft spots before consuming'
-        ]
-      });
+      setAnalysisResult(getRandomResult());
       setIsAnalyzing(false);
     }, 2000);
   };
@@ -86,24 +128,30 @@ const FreshnessAnalyzer = ({ onNavigate }) => {
                       alt="Selected produce"
                       className="max-w-md mx-auto mb-4 rounded-lg shadow-md"
                     />
-                    <div className="flex gap-4 justify-center">
-                      <button
-                        onClick={analyzeImage}
-                        disabled={isAnalyzing}
-                        className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors disabled:opacity-50"
-                      >
-                        {isAnalyzing ? 'Analyzing...' : 'Analyze Freshness'}
-                      </button>
-                      <button
-                        onClick={() => {
-                          setSelectedImage(null);
-                          setAnalysisResult(null);
-                        }}
-                        className="bg-gray-500 text-white px-6 py-3 rounded-lg font-medium hover:bg-gray-600 transition-colors"
-                      >
-                        Upload New Image
-                      </button>
-                    </div>
+                    {isAnalyzing ? (
+                      <div className="text-center">
+                        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mb-4"></div>
+                        <p className="text-purple-600 font-medium">Analyzing your produce...</p>
+                      </div>
+                    ) : (
+                      <div className="flex gap-4 justify-center">
+                        <button
+                          onClick={analyzeImage}
+                          className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors"
+                        >
+                          Re-analyze Freshness
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSelectedImage(null);
+                            setAnalysisResult(null);
+                          }}
+                          className="bg-gray-500 text-white px-6 py-3 rounded-lg font-medium hover:bg-gray-600 transition-colors"
+                        >
+                          Upload New Image
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -116,20 +164,40 @@ const FreshnessAnalyzer = ({ onNavigate }) => {
                 
                 <div className="grid md:grid-cols-2 gap-8">
                   <div>
-                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6">
+                    <div className={`rounded-xl p-6 ${
+                      analysisResult.freshness >= 70 ? 'bg-gradient-to-r from-green-50 to-emerald-50' :
+                      analysisResult.freshness >= 40 ? 'bg-gradient-to-r from-yellow-50 to-orange-50' :
+                      analysisResult.freshness >= 20 ? 'bg-gradient-to-r from-orange-50 to-red-50' :
+                      'bg-gradient-to-r from-red-50 to-red-100'
+                    }`}>
                       <div className="flex items-center justify-between mb-4">
                         <h3 className="text-lg font-semibold text-gray-800">Freshness Score</h3>
-                        <span className="text-2xl font-bold text-emerald-600">
+                        <span className={`text-2xl font-bold ${
+                          analysisResult.freshness >= 70 ? 'text-emerald-600' :
+                          analysisResult.freshness >= 40 ? 'text-yellow-600' :
+                          analysisResult.freshness >= 20 ? 'text-orange-600' :
+                          'text-red-600'
+                        }`}>
                           {analysisResult.freshness}%
                         </span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-3">
                         <div
-                          className="bg-emerald-500 h-3 rounded-full transition-all duration-500"
+                          className={`h-3 rounded-full transition-all duration-500 ${
+                            analysisResult.freshness >= 70 ? 'bg-emerald-500' :
+                            analysisResult.freshness >= 40 ? 'bg-yellow-500' :
+                            analysisResult.freshness >= 20 ? 'bg-orange-500' :
+                            'bg-red-500'
+                          }`}
                           style={{ width: `${analysisResult.freshness}%` }}
                         ></div>
                       </div>
-                      <p className="text-emerald-700 font-medium mt-2">
+                      <p className={`font-medium mt-2 ${
+                        analysisResult.freshness >= 70 ? 'text-emerald-700' :
+                        analysisResult.freshness >= 40 ? 'text-yellow-700' :
+                        analysisResult.freshness >= 20 ? 'text-orange-700' :
+                        'text-red-700'
+                      }`}>
                         Status: {analysisResult.status}
                       </p>
                     </div>
