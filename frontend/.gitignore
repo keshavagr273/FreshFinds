@@ -1,0 +1,30 @@
+# ===== FRONTEND SPECIFIC GITIGNORE =====
+
+# === Vite build outputs ===
+dist/
+dist-ssr/
+
+# === Vite cache ===
+.vite/
+vite.config.js.timestamp-*
+
+# === Development server ===
+*.local
+
+
+
+# === React/Vite specific ===
+.eslintcache
+
+# === HMR logs ===
+*.log
+
+# === Temp files ===
+*.tmp
+*.temp
+
+# === Local environment ===
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
