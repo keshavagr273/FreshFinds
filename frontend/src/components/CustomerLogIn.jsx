@@ -43,9 +43,10 @@ const Login = ({ onSwitch, onNavigate, onSuccess }) => {
     }
 
     try {
+      const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
       const endpoint = role === 'customer'
-        ? 'http://localhost:3000/api/auth/customer-login'
-        : 'http://localhost:3000/api/auth/merchant-login';
+        ? `${baseURL}/auth/customer-login`
+        : `${baseURL}/auth/merchant-login`;
       
       const loginData = {
         userID: form.userID,

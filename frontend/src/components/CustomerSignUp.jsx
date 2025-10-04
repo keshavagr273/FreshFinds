@@ -72,9 +72,10 @@ const Signup = ({ onSwitch, onModeChange, onSuccess, onNavigate }) => {
       return;
     }
     try {
+      const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
       const endpoint = role === 'customer'
-        ? 'http://localhost:3000/api/auth/customer-signup'
-        : 'http://localhost:3000/api/auth/merchant-signup';
+        ? `${baseURL}/auth/customer-signup`
+        : `${baseURL}/auth/merchant-signup`;
 
       const res = await axios.post(endpoint, form);
       if (onSuccess && res.data.user) {
