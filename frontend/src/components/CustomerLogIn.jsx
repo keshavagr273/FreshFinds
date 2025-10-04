@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import axios from 'axios';
+import { toast } from 'react-toastify';
 
 // Icons
 const UserIcon = () => (
@@ -14,7 +16,13 @@ const LockIcon = () => (
   </svg>
 );
 
-const Login = ({ onSwitch, onNavigate }) => {
+const EyeIcon = ({ open, onClick }) => (
+  <span onClick={onClick} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+    {!open ? '👁️' : '🙈'}
+  </span>
+);
+
+const Login = ({ onSwitch, onNavigate, onSuccess }) => {
   const [role, setRole] = useState("customer");
   const [showPassword, setShowPassword] = useState(false);
   const [form, setForm] = useState({
@@ -26,15 +34,49 @@ const Login = ({ onSwitch, onNavigate }) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // TODO: API call for login
-    console.log("Logging in as", role, form);
-    // Simulate successful login and redirect to appropriate page
-    if (role === "customer") {
-      onNavigate && onNavigate('home');
-    } else {
-      onNavigate && onNavigate('overview'); // Merchant dashboard
+    
+    if (!form.userID.trim() || !form.password.trim()) {
+      toast.error('Please fill in all fields.');
+      return;
+    }
+
+    try {
+      const endpoint = role === 'customer'
+        ? 'http://localhost:3000/api/auth/customer-login'
+        : 'http://localhost:3000/api/auth/merchant-login';
+      
+      const loginData = role === 'customer'
+        ? { customerID: form.userID, password: form.password }
+        : { merchantID: form.userID, password: form.password };
+
+      const res = await axios.post(endpoint, loginData);
+      
+      if (res.data.token && res.data.user) {
+        // Store authentication data
+        localStorage.setItem('token', res.data.token);
+        localStorage.setItem('user', JSON.stringify(res.data.user));
+        localStorage.setItem('userRole', res.data.user.role);
+        
+        toast.success('Login successful!');
+        
+        // Call onSuccess callback if provided
+        if (onSuccess) {
+          onSuccess(res.data.user);
+        }
+        
+        // Navigate to appropriate page
+        if (role === "customer") {
+          onNavigate && onNavigate('home');
+        } else {
+          onNavigate && onNavigate('overview');
+        }
+      } else {
+        toast.error(res.data.message || 'Login failed');
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Login failed');
     }
   };
 
@@ -80,33 +122,34 @@ const Login = ({ onSwitch, onNavigate }) => {
               <label className="block text-sm font-medium mb-1">
                 {role === "customer" ? "Customer ID" : "Merchant ID"}
               </label>
-              <input
-                type="text"
-                name="userID"
-                value={form.userID}
-                onChange={handleChange}
-                placeholder={`Enter your ${role} ID`}
-                className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500"
-              />
+              <div className="flex items-center border rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-purple-500">
+                <UserIcon />
+                <input
+                  type="text"
+                  name="userID"
+                  value={form.userID}
+                  onChange={handleChange}
+                  placeholder={`Enter your ${role} ID`}
+                  className="flex-1 outline-none ml-2"
+                />
+              </div>
             </div>
 
             <div>
               <label className="block text-sm font-medium mb-1">Password</label>
-              <div className="flex items-center border rounded-lg px-3 py-2">
+              <div className="flex items-center border rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-purple-500">
+                <LockIcon />
                 <input
                   type={showPassword ? "text" : "password"}
                   name="password"
                   value={form.password}
                   onChange={handleChange}
                   placeholder="Enter your password"
-                  className="flex-1 outline-none"
+                  className="flex-1 outline-none ml-2"
                 />
-                <span
-                  className="cursor-pointer ml-2"
-                  onClick={() => setShowPassword((v) => !v)}
-                >
-                  {showPassword ? "🙈" : "👁️"}
-                </span>
+                <div className="ml-2">
+                  <EyeIcon open={showPassword} onClick={() => setShowPassword((v) => !v)} />
+                </div>
               </div>
             </div>
 
@@ -121,7 +164,7 @@ const Login = ({ onSwitch, onNavigate }) => {
           <p className="text-center text-sm mt-4 text-gray-600">
             Don't have an account?{" "}
             <span
-              className="text-purple-600 font-semibold cursor-pointer"
+              className="text-purple-600 font-semibold cursor-pointer hover:text-purple-700"
               onClick={() => onSwitch && onSwitch("signup")}
             >
               Sign Up

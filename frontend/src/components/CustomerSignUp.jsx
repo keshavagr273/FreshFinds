@@ -95,59 +95,127 @@ const Signup = ({ onSwitch, onModeChange, onSuccess, onNavigate }) => {
 
   return (
     <>
-
-      <div className={styles['signup-bg']}>
-        <div className={styles['signup-card']}>
-          <div className={styles['signup-title']}>
+      <div className={styles.container}>
+        <div className={styles.card}>
+          <div className={styles.title}>
             {role === 'customer' ? 'Customer Signup' : 'Merchant Signup'}
           </div>
-          <div className={styles['signup-subtitle']}>Create your account to get started.</div>
+          <div className={styles.subtitle}>Create your account to get started.</div>
 
-          <div className={styles['toggle-row']}>
-            <button type="button" className={role === 'merchant' ? `${styles['toggle-btn']} ${styles['active']}` : styles['toggle-btn']} onClick={() => { setRole('merchant'); onSwitch && onSwitch('merchant'); }}>Merchant</button>
-            <button type="button" className={role === 'customer' ? `${styles['toggle-btn']} ${styles['active']}` : styles['toggle-btn']} onClick={() => setRole('customer')}>Customer</button>
+          <div className={styles.toggle}>
+            <button 
+              type="button" 
+              className={role === 'merchant' ? `${styles.toggleButton} ${styles.toggleButtonActive}` : styles.toggleButton} 
+              onClick={() => { setRole('merchant'); onSwitch && onSwitch('merchant'); }}
+            >
+              Merchant
+            </button>
+            <button 
+              type="button" 
+              className={role === 'customer' ? `${styles.toggleButton} ${styles.toggleButtonActive}` : styles.toggleButton} 
+              onClick={() => setRole('customer')}
+            >
+              Customer
+            </button>
           </div>
 
-          <form onSubmit={handleSubmit} autoComplete="off">
-            <label className={styles['signup-label']}>Username</label>
-            <div className={styles['input-row']}><UserIcon /><input name="username" placeholder="your_username" value={form.username} onChange={handleChange} /></div>
+          <form onSubmit={handleSubmit} autoComplete="off" className={styles.form}>
+            <div className={styles.inputGroup}>
+              <label className="block text-sm font-medium mb-1 text-gray-700">Username</label>
+              <div className="relative">
+                <div className={styles.inputIcon}><UserIcon /></div>
+                <input 
+                  name="username" 
+                  placeholder="your_username" 
+                  value={form.username} 
+                  onChange={handleChange}
+                  className={styles.inputWithIcon}
+                />
+              </div>
+            </div>
 
-            <label className={styles['signup-label']}>{role === 'customer' ? 'Customer ID' : 'Merchant ID'}</label>
-            <div className={styles['input-row']}><IdIcon /><input name={role === 'customer' ? 'customerID' : 'merchantID'} placeholder={`Enter your ${role} ID`} value={role === 'customer' ? form.customerID : form.merchantID} onChange={handleChange} /></div>
+            <div className={styles.inputGroup}>
+              <label className="block text-sm font-medium mb-1 text-gray-700">{role === 'customer' ? 'Customer ID' : 'Merchant ID'}</label>
+              <div className="relative">
+                <div className={styles.inputIcon}><IdIcon /></div>
+                <input 
+                  name={role === 'customer' ? 'customerID' : 'merchantID'} 
+                  placeholder={`Enter your ${role} ID`} 
+                  value={role === 'customer' ? form.customerID : form.merchantID} 
+                  onChange={handleChange}
+                  className={styles.inputWithIcon}
+                />
+              </div>
+            </div>
 
-            <label className={styles['signup-label']}>Phone</label>
-            <div className={styles['input-row']}><PhoneIcon /><input name="phone" placeholder="+91 12345 67890" value={form.phone} onChange={handleChange} /></div>
+            <div className={styles.inputGroup}>
+              <label className="block text-sm font-medium mb-1 text-gray-700">Phone</label>
+              <div className="relative">
+                <div className={styles.inputIcon}><PhoneIcon /></div>
+                <input 
+                  name="phone" 
+                  placeholder="+91 12345 67890" 
+                  value={form.phone} 
+                  onChange={handleChange}
+                  className={styles.inputWithIcon}
+                />
+              </div>
+            </div>
 
-            <label className={styles['signup-label']}>Email</label>
-            <div className={styles['input-row']}><EmailIcon /><input name="email" placeholder="you@example.com" value={form.email} onChange={handleChange} /></div>
+            <div className={styles.inputGroup}>
+              <label className="block text-sm font-medium mb-1 text-gray-700">Email</label>
+              <div className="relative">
+                <div className={styles.inputIcon}><EmailIcon /></div>
+                <input 
+                  name="email" 
+                  placeholder="you@example.com" 
+                  value={form.email} 
+                  onChange={handleChange}
+                  className={styles.inputWithIcon}
+                />
+              </div>
+            </div>
 
-            <label className={styles['signup-label']}>Password</label>
-            <div className={styles['input-row']}>
-              <LockIcon />
-              <input
-                name="password"
-                type={showPassword ? 'text' : 'password'}
-                placeholder="Enter your password"
-                value={form.password}
-                onChange={handleChange}
-                style={{ flex: 1 }}
-              />
-              <EyeIcon open={showPassword} onClick={() => setShowPassword((v) => !v)} />
+            <div className={styles.inputGroup}>
+              <label className="block text-sm font-medium mb-1 text-gray-700">Password</label>
+              <div className={styles.passwordContainer}>
+                <div className={styles.inputIcon}><LockIcon /></div>
+                <input
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Enter your password"
+                  value={form.password}
+                  onChange={handleChange}
+                  className={styles.inputWithIcon}
+                />
+                <div className={styles.eyeIcon}>
+                  <EyeIcon open={showPassword} onClick={() => setShowPassword((v) => !v)} />
+                </div>
+              </div>
             </div>
 
             {role === 'merchant' && (
-              <>
-                <label className={styles['signup-label']}>Store Name</label>
-                <div className={styles['input-row']}><StoreIcon /><input name="storeName" placeholder="e.g. FreshMart" value={form.storeName} onChange={handleChange} /></div>
-              </>
+              <div className={styles.inputGroup}>
+                <label className="block text-sm font-medium mb-1 text-gray-700">Store Name</label>
+                <div className="relative">
+                  <div className={styles.inputIcon}><StoreIcon /></div>
+                  <input 
+                    name="storeName" 
+                    placeholder="e.g. FreshMart" 
+                    value={form.storeName} 
+                    onChange={handleChange}
+                    className={styles.inputWithIcon}
+                  />
+                </div>
+              </div>
             )}
 
-            <button className={styles['signup-btn']} type="submit">Sign Up</button>
+            <button className={styles.submitButton} type="submit">Sign Up</button>
           </form>
 
-          <div className={styles['signup-footer']}>
-            Already have an account?
-            <span style={{ color: '#7c19e5', fontWeight: 600, marginLeft: 4, cursor: 'pointer' }} onClick={() => onModeChange && onModeChange('login')}>Login</span>
+          <div className={styles.switchLink}>
+            Already have an account?{' '}
+            <button onClick={() => onModeChange && onModeChange('login')}>Login</button>
           </div>
         </div>
       </div>
