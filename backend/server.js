@@ -18,6 +18,7 @@ const orderRoutes = require('./routes/orders');
 const freshnessRoutes = require('./routes/freshness');
 const merchantRoutes = require('./routes/merchant');
 const dashboardRoutes = require('./routes/dashboard');
+const uploadRoutes = require('./routes/upload');
 
 const app = express();
 const server = createServer(app);
@@ -89,6 +90,7 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/freshness', freshnessRoutes);
 app.use('/api/merchant', merchantRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/upload', uploadRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

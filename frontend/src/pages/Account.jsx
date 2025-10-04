@@ -1,16 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { getUserAvatar } from '../utils/helpers';
+import { toast } from 'react-toastify';
+import axios from 'axios';
 
-const Account = ({ onNavigate }) => {
+const Account = ({ onNavigate, user, onUpdateUser }) => {
   const [activeTab, setActiveTab] = useState('profile');
+  const [profileImage, setProfileImage] = useState(user?.avatar || getUserAvatar('male'));
+  const [isUploading, setIsUploading] = useState(false);
   const [formData, setFormData] = useState({
-    fullName: 'John Doe',
-    email: 'john.doe@example.com',
-    phoneNumber: '+1 (555) 123-4567',
+    fullName: user?.username || 'User',
+    email: user?.email || 'user@example.com',
+    phoneNumber: user?.phone || 'Not provided',
     currentPassword: '',
     newPassword: '',
     confirmPassword: ''
   });
+
+  // Update profile image when user prop changes
+  useEffect(() => {
+    if (user?.avatar) {
+      setProfileImage(user.avatar);
+    } else {
+      setProfileImage(getUserAvatar('male'));
+    }
+  }, [user]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -18,6 +31,80 @@ const Account = ({ onNavigate }) => {
       ...prev,
       [name]: value
     }));
+  };
+
+  const uploadToCloudinary = async (file) => {
+    try {
+      setIsUploading(true);
+      
+      // Get auth token from localStorage
+      const token = localStorage.getItem('token');
+      if (!token) {
+        toast.error('Please log in to upload profile photo');
+        return;
+      }
+
+      // Create form data
+      const formData = new FormData();
+      formData.append('image', file);
+
+      // Upload to backend API
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api'}/upload/profile-image`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+
+      if (response.data.success) {
+        setProfileImage(response.data.data.avatar);
+        toast.success('Profile photo updated successfully!');
+        
+        // Update user data in parent component
+        if (onUpdateUser && response.data.data.user) {
+          onUpdateUser(response.data.data.user);
+        }
+        
+      } else {
+        toast.error(response.data.message || 'Failed to upload image');
+      }
+
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast.error(error.response?.data?.message || 'Failed to upload image');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handlePhotoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validate file type
+      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+      if (!validTypes.includes(file.type)) {
+        toast.error('Please select a valid image file (JPEG, PNG, GIF, or WebP)');
+        return;
+      }
+
+      // Validate file size (max 5MB)
+      const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+      if (file.size > maxSize) {
+        toast.error('File size must be less than 5MB');
+        return;
+      }
+
+      // Upload to Cloudinary via backend
+      uploadToCloudinary(file);
+    }
+  };
+
+  const triggerPhotoUpload = () => {
+    document.getElementById('photo-upload').click();
   };
 
   const handleSaveChanges = () => {
@@ -65,19 +152,92 @@ const Account = ({ onNavigate }) => {
                   <>
                     {/* Profile Picture Section */}
                     <div className="flex items-center gap-6 mb-8">
-                      <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-purple-200">
+                      <div className="relative w-20 h-20 rounded-full overflow-hidden border-4 border-purple-200 group cursor-pointer" onClick={!isUploading ? triggerPhotoUpload : undefined}>
                         <img 
-                          src={getUserAvatar('male')} 
+                          src={profileImage} 
                           alt="Profile" 
-                          className="w-full h-full object-cover" 
+                          className={`w-full h-full object-cover transition-all ${isUploading ? 'brightness-50' : 'group-hover:brightness-75'}`} 
                         />
+                        <div className={`absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 transition-all ${
+                          isUploading ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                        }`}>
+                          {isUploading ? (
+                            <div className="animate-spin rounded-full h-6 w-6 border-2 border-white border-t-transparent"></div>
+                          ) : (
+                            <span className="text-white text-xs font-medium">📷</span>
+                          )}
+                        </div>
                       </div>
                       <div>
                         <h3 className="text-lg font-bold text-gray-900 mb-2">Profile Picture</h3>
-                        <button className="text-sm text-purple-600 hover:text-purple-700 font-medium">
-                          Change Photo
-                        </button>
+                        <div className="flex items-center gap-3">
+                          <button 
+                            onClick={triggerPhotoUpload}
+                            type="button"
+                            disabled={isUploading}
+                            className="text-sm text-purple-600 hover:text-purple-700 font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-1 rounded disabled:opacity-50"
+                          >
+                            {isUploading ? 'Uploading...' : 'Change Photo'}
+                          </button>
+                          <span className="text-gray-300">|</span>
+                          <button 
+                            onClick={async () => {
+                              try {
+                                setIsUploading(true);
+                                const token = localStorage.getItem('token');
+                                
+                                if (!token) {
+                                  toast.error('Please log in to reset profile photo');
+                                  return;
+                                }
+
+                                const response = await axios.delete(
+                                  `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api'}/upload/profile-image`,
+                                  {
+                                    headers: {
+                                      'Authorization': `Bearer ${token}`
+                                    }
+                                  }
+                                );
+
+                                if (response.data.success) {
+                                  setProfileImage(getUserAvatar('male'));
+                                  toast.info('Profile photo reset to default');
+                                  
+                                  // Update user data in parent component
+                                  if (onUpdateUser && response.data.data.user) {
+                                    onUpdateUser(response.data.data.user);
+                                  }
+                                } else {
+                                  toast.error(response.data.message || 'Failed to reset image');
+                                }
+                              } catch (error) {
+                                console.error('Reset error:', error);
+                                toast.error(error.response?.data?.message || 'Failed to reset image');
+                              } finally {
+                                setIsUploading(false);
+                              }
+                            }}
+                            type="button"
+                            disabled={isUploading}
+                            className="text-sm text-gray-500 hover:text-gray-700 font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-1 rounded disabled:opacity-50"
+                          >
+                            {isUploading ? 'Resetting...' : 'Reset'}
+                          </button>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">
+                          JPG, PNG or GIF. Max size 5MB.
+                        </p>
                       </div>
+                      
+                      {/* Hidden file input */}
+                      <input
+                        id="photo-upload"
+                        type="file"
+                        accept="image/*"
+                        onChange={handlePhotoChange}
+                        className="hidden"
+                      />
                     </div>
 
                     {/* Personal Information */}

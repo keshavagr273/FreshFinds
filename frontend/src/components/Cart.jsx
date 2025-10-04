@@ -1,38 +1,19 @@
 import React, { useState } from 'react';
 import { getProductImage } from '../utils/helpers';
 
-const Cart = ({ onNavigate }) => {
-  const [cartItems, setCartItems] = useState([
-    {
-      id: 1,
-      name: "Fresh Organic Bananas",
-      price: 2.49,
-      quantity: 3,
-      image: getProductImage('fruits', 'banana')
-    },
-    {
-      id: 2,
-      name: "Fresh Tomatoes",
-      price: 3.99,
-      quantity: 2,
-      image: getProductImage('vegetables', 'tomato')
-    },
-    {
-      id: 3,
-      name: "Artisan Bread",
-      price: 2.99,
-      quantity: 1,
-      image: getProductImage('bakery', 'bread')
-    }
-  ]);
+const Cart = ({ onNavigate, cartItems: initialCartItems = [], onUpdateCart }) => {
+  const [cartItems, setCartItems] = useState(initialCartItems);
 
   const updateQuantity = (id, newQuantity) => {
-    if (newQuantity === 0) {
-      setCartItems(cartItems.filter(item => item.id !== id));
-    } else {
-      setCartItems(cartItems.map(item => 
-        item.id === id ? { ...item, quantity: newQuantity } : item
-      ));
+    const updatedItems = newQuantity === 0 
+      ? cartItems.filter(item => item.id !== id)
+      : cartItems.map(item => 
+          item.id === id ? { ...item, quantity: newQuantity } : item
+        );
+    
+    setCartItems(updatedItems);
+    if (onUpdateCart) {
+      onUpdateCart(updatedItems);
     }
   };
 
@@ -58,6 +39,36 @@ const Cart = ({ onNavigate }) => {
     const gstTax = getGSTTax();
     return (subtotal + deliveryTax + gstTax).toFixed(2);
   };
+
+  if (cartItems.length === 0) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-gray-50">
+        <main className="flex-grow">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div className="max-w-4xl mx-auto">
+              <h1 className="text-4xl font-bold tracking-tight text-gray-900 mb-8">
+                Shopping Cart
+              </h1>
+              
+              <div className="bg-white rounded-xl shadow-lg p-8 text-center">
+                <div className="text-6xl mb-4">🛒</div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-4">Your cart is empty</h2>
+                <p className="text-gray-600 mb-6">
+                  Start shopping to add items to your cart and enjoy fresh, affordable food!
+                </p>
+                <button
+                  onClick={() => onNavigate && onNavigate('shop')}
+                  className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                >
+                  Browse Products
+                </button>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 font-display text-gray-800">

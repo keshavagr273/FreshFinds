@@ -71,31 +71,31 @@ const HomePage = ({ onNavigate }) => {
             </div>
             <div className="mt-16 grid gap-8 md:grid-cols-2 lg:grid-cols-4">
               <div className="flex flex-col items-center text-center gap-3 rounded-xl bg-white dark:bg-gray-900 p-8 shadow-sm transition-shadow hover:shadow-lg">
-                <span className="text-purple-600 text-4xl">🌱</span>
+                <span className="text-green-600 text-4xl">🌱♻️</span>
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white">Eco-Friendly</h3>
                 <p className="text-gray-600 dark:text-gray-400">
                   Reduce food waste and its environmental impact.
                 </p>
               </div>
               <div className="flex flex-col items-center text-center gap-3 rounded-xl bg-white dark:bg-gray-900 p-8 shadow-sm transition-shadow hover:shadow-lg">
-                <span className="text-purple-600 text-4xl">💰</span>
+                <span className="text-yellow-600 text-4xl">💰🛒</span>
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white">Save Money</h3>
                 <p className="text-gray-600 dark:text-gray-400">
-                  Access high-quality food at affordable prices.
+                  Access high-quality fresh food at affordable prices.
                 </p>
               </div>
               <div className="flex flex-col items-center text-center gap-3 rounded-xl bg-white dark:bg-gray-900 p-8 shadow-sm transition-shadow hover:shadow-lg">
-                <span className="text-purple-600 text-4xl">🏪</span>
+                <span className="text-blue-600 text-4xl">🏪🤝</span>
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white">Support Local</h3>
                 <p className="text-gray-600 dark:text-gray-400">
-                  Help small businesses in your community thrive.
+                  Help local farmers and small businesses in your community thrive.
                 </p>
               </div>
               <div className="flex flex-col items-center text-center gap-3 rounded-xl bg-white dark:bg-gray-900 p-8 shadow-sm transition-shadow hover:shadow-lg">
-                <span className="text-purple-600 text-4xl">🌸</span>
+                <span className="text-purple-600 text-4xl">�🥕🍌</span>
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white">Discover Variety</h3>
                 <p className="text-gray-600 dark:text-gray-400">
-                  Explore new and exciting food items from local shops.
+                  Explore fresh fruits, vegetables, and exciting food items from local shops.
                 </p>
               </div>
             </div>
@@ -113,10 +113,10 @@ const HomePage = ({ onNavigate }) => {
             </p>
             <div className="mt-10">
               <button 
-                onClick={() => onNavigate && onNavigate('signup')}
+                onClick={() => onNavigate && onNavigate('shop')}
                 className="rounded-full bg-white px-8 py-3 text-lg font-bold text-purple-600 shadow-lg transition-transform hover:scale-105"
               >
-                Get Started
+                Start Shopping
               </button>
             </div>
           </div>

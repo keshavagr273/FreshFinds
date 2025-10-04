@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import './App.css'
-import { ToastContainer } from 'react-toastify'
+import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 
 // Import components
@@ -16,10 +16,11 @@ import HomePage from './pages/HomePage'
 import Account from './pages/Account'
 
 function App() {
-  const [currentView, setCurrentView] = useState('login')
+  const [currentView, setCurrentView] = useState('home')
   const [searchQuery, setSearchQuery] = useState('')
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [user, setUser] = useState(null)
+  const [cartItems, setCartItems] = useState([])
 
   // Check if user is already logged in
   useEffect(() => {
@@ -50,76 +51,115 @@ function App() {
     setIsAuthenticated(true)
   }
 
+  const handleUpdateUser = (updatedUserData) => {
+    setUser(updatedUserData)
+    localStorage.setItem('user', JSON.stringify(updatedUserData))
+  }
+
   const handleLogout = () => {
     localStorage.removeItem('token')
     localStorage.removeItem('user')
     localStorage.removeItem('userRole')
     setUser(null)
     setIsAuthenticated(false)
+    setCartItems([])
     setCurrentView('login')
   }
 
-  const renderView = () => {
-    // If not authenticated, only show login/signup
-    if (!isAuthenticated) {
-      switch (currentView) {
-        case 'signup':
-          return (
-            <CustomerSignUp 
-              onSwitch={() => setCurrentView('login')} 
-              onModeChange={setCurrentView}
-              onNavigate={setCurrentView}
-              onSuccess={handleLogin}
-            />
-          )
-        case 'login':
-        default:
-          return (
-            <CustomerLogIn 
-              onSwitch={() => setCurrentView('signup')} 
-              onNavigate={setCurrentView}
-              onSuccess={handleLogin}
-            />
-          )
-      }
-    }
+  const handleUpdateCart = (newCartItems) => {
+    setCartItems(newCartItems)
+  }
 
-    // If authenticated, show all views
+  const addToCart = (product) => {
+    const existingItem = cartItems.find(item => item.id === product.id)
+    
+    if (existingItem) {
+      const updatedItems = cartItems.map(item =>
+        item.id === product.id 
+          ? { ...item, quantity: item.quantity + 1 }
+          : item
+      )
+      setCartItems(updatedItems)
+    } else {
+      const newItem = {
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        quantity: 1,
+        image: product.image || '/images/default-product.jpg'
+      }
+      setCartItems([...cartItems, newItem])
+    }
+    
+    // Show success message
+    toast.success(`${product.name} added to cart!`)
+  }
+
+  const handleNavigation = (targetView) => {
+    // Pages that require authentication
+    const protectedPages = ['shop', 'account', 'cart', 'analyzer', 'overview', 'product']
+    
+    if (protectedPages.includes(targetView) && !isAuthenticated) {
+      // Redirect to login if trying to access protected page without authentication
+      setCurrentView('login')
+      return
+    }
+    
+    // Allow navigation to the target view
+    setCurrentView(targetView)
+  }
+
+  const renderView = () => {
     switch (currentView) {
       case 'home':
-        return <HomePage onNavigate={setCurrentView} />
+        return <HomePage onNavigate={handleNavigation} />
       case 'login':
-        return <CustomerLogIn onSwitch={() => setCurrentView('signup')} onNavigate={setCurrentView} onSuccess={handleLogin} />
+        return (
+          <CustomerLogIn 
+            onSwitch={() => setCurrentView('signup')} 
+            onNavigate={handleNavigation}
+            onSuccess={handleLogin}
+          />
+        )
       case 'signup':
-        return <CustomerSignUp onSwitch={() => setCurrentView('login')} onModeChange={setCurrentView} onNavigate={setCurrentView} onSuccess={handleLogin} />
+        return (
+          <CustomerSignUp 
+            onSwitch={() => setCurrentView('login')} 
+            onModeChange={setCurrentView}
+            onNavigate={handleNavigation}
+            onSuccess={handleLogin}
+          />
+        )
       case 'account':
-        return <Account onNavigate={setCurrentView} user={user} />
+        return isAuthenticated ? <Account onNavigate={handleNavigation} user={user} onUpdateUser={handleUpdateUser} /> : <CustomerLogIn onSwitch={() => setCurrentView('signup')} onNavigate={handleNavigation} onSuccess={handleLogin} />
       case 'cart':
-        return <Cart onNavigate={setCurrentView} />
+        return isAuthenticated ? <Cart onNavigate={handleNavigation} cartItems={cartItems} onUpdateCart={handleUpdateCart} /> : <CustomerLogIn onSwitch={() => setCurrentView('signup')} onNavigate={handleNavigation} onSuccess={handleLogin} />
       case 'analyzer':
-        return <FreshnessAnalyzer onNavigate={setCurrentView} />
+        return isAuthenticated ? <FreshnessAnalyzer onNavigate={handleNavigation} /> : <CustomerLogIn onSwitch={() => setCurrentView('signup')} onNavigate={handleNavigation} onSuccess={handleLogin} />
       case 'shop':
-        return <ShopDashboard onNavigate={setCurrentView} searchQuery={searchQuery} />
+        return isAuthenticated ? <ShopDashboard onNavigate={handleNavigation} searchQuery={searchQuery} addToCart={addToCart} /> : <CustomerLogIn onSwitch={() => setCurrentView('signup')} onNavigate={handleNavigation} onSuccess={handleLogin} />
       case 'overview':
-        return <ShopDashboardOverview onNavigate={setCurrentView} />
+        return isAuthenticated ? <ShopDashboardOverview onNavigate={handleNavigation} /> : <CustomerLogIn onSwitch={() => setCurrentView('signup')} onNavigate={handleNavigation} onSuccess={handleLogin} />
       case 'product':
-        return <ProductDashboard onNavigate={setCurrentView} searchQuery={searchQuery} />
+        return isAuthenticated ? <ProductDashboard onNavigate={handleNavigation} searchQuery={searchQuery} addToCart={addToCart} /> : <CustomerLogIn onSwitch={() => setCurrentView('signup')} onNavigate={handleNavigation} onSuccess={handleLogin} />
       default:
-        return <HomePage onNavigate={setCurrentView} />
+        return <HomePage onNavigate={handleNavigation} />
     }
   }
 
-  const showHeader = isAuthenticated && !['login', 'signup'].includes(currentView)
+  const showHeader = true // Show header on all pages
 
   return (
     <div className="App">
       {showHeader && (
         <Header 
-          onNavigate={setCurrentView} 
+          onNavigate={handleNavigation} 
           currentView={currentView} 
           onSearch={handleSearch}
           onLogout={handleLogout}
           user={user}
+          cartItems={cartItems}
+          isAuthenticated={isAuthenticated}
         />
       )}
       <div className={showHeader ? 'pt-0' : ''}>

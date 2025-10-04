@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { getProductImage } from '../utils/helpers';
 
-const ShopDashboard = ({ onNavigate, searchQuery = '' }) => {
+const ShopDashboard = ({ onNavigate, searchQuery = '', addToCart }) => {
   const [selectedCategory, setSelectedCategory] = useState('all');
 
   const categories = [
     { id: 'all', name: 'All Categories', icon: '📋' },
-    { id: 'fruits', name: 'Fruits', icon: '�' },
-    { id: 'vegetables', name: 'Vegetables', icon: '🍅' },
-    { id: 'dairy', name: 'Dairy & Eggs', icon: '�' },
+    { id: 'fruits', name: 'Fruits', icon: '🍎' },
+    { id: 'vegetables', name: 'Vegetables', icon: '🥕' },
+    { id: 'dairy', name: 'Dairy & Eggs', icon: '🥛' },
     { id: 'bakery', name: 'Bakery', icon: '🍞' },
     { id: 'protein', name: 'Fresh Fish', icon: '🐟' }
   ];
@@ -73,6 +73,42 @@ const ShopDashboard = ({ onNavigate, searchQuery = '' }) => {
       category: 'protein',
       freshness: 94,
       expiryDays: 1
+    },
+    {
+      id: 6,
+      name: 'Organic Whole Milk',
+      price: 3.99,
+      originalPrice: 4.99,
+      discount: 20,
+      rating: 4.5,
+      image: getProductImage('dairy', 'milk'),
+      category: 'dairy',
+      freshness: 92,
+      expiryDays: 7
+    },
+    {
+      id: 7,
+      name: 'Fresh Apples',
+      price: 2.99,
+      originalPrice: 4.49,
+      discount: 33,
+      rating: 4.7,
+      image: getProductImage('fruits', 'apple'),
+      category: 'fruits',
+      freshness: 89,
+      expiryDays: 5
+    },
+    {
+      id: 8,
+      name: 'Organic Carrots',
+      price: 1.99,
+      originalPrice: 2.99,
+      discount: 33,
+      rating: 4.4,
+      image: getProductImage('vegetables', 'carrot'),
+      category: 'vegetables',
+      freshness: 91,
+      expiryDays: 10
     }
   ];
 
@@ -178,7 +214,10 @@ const ShopDashboard = ({ onNavigate, searchQuery = '' }) => {
                       <span className="text-green-600 font-medium">In Stock</span>
                     </div>
                     
-                    <button className="w-full bg-purple-600 text-white py-2 rounded-lg font-medium hover:bg-purple-700 transition-colors">
+                    <button 
+                      onClick={() => addToCart && addToCart(product)}
+                      className="w-full bg-purple-600 text-white py-2 rounded-lg font-medium hover:bg-purple-700 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
+                    >
                       Add to Cart
                     </button>
                   </div>

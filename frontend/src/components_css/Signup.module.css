@@ -1,11 +1,12 @@
 /* Signup Component Styles */
 .container {
-  min-height: 100vh;
+  min-height: calc(100vh - 4rem);
   display: flex;
   align-items: center;
   justify-content: center;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   padding: 1rem;
+  padding-top: 5rem;
 }
 
 .card {

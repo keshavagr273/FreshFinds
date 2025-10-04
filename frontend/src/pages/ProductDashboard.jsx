@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { getProductImage } from '../utils/helpers';
 
-const ProductDashboard = ({ onNavigate, searchQuery = '' }) => {
+const ProductDashboard = ({ onNavigate, searchQuery = '', addToCart }) => {
   const [selectedProduct, setSelectedProduct] = useState({
     id: 1,
     name: 'Artisan Fresh Bread',
@@ -42,8 +42,11 @@ const ProductDashboard = ({ onNavigate, searchQuery = '' }) => {
   ];
 
   const handleAddToCart = () => {
-    console.log(`Added ${quantity} x ${selectedProduct.name} to cart`);
-    // Add to cart logic here
+    if (addToCart && selectedProduct) {
+      for (let i = 0; i < quantity; i++) {
+        addToCart(selectedProduct);
+      }
+    }
   };
 
   return (

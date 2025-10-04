@@ -47,9 +47,10 @@ const Login = ({ onSwitch, onNavigate, onSuccess }) => {
         ? 'http://localhost:3000/api/auth/customer-login'
         : 'http://localhost:3000/api/auth/merchant-login';
       
-      const loginData = role === 'customer'
-        ? { customerID: form.userID, password: form.password }
-        : { merchantID: form.userID, password: form.password };
+      const loginData = {
+        userID: form.userID,
+        password: form.password
+      };
 
       const res = await axios.post(endpoint, loginData);
       
@@ -82,7 +83,7 @@ const Login = ({ onSwitch, onNavigate, onSuccess }) => {
 
   return (
     <>
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-indigo-100 p-4">
+      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-gradient-to-br from-purple-50 to-indigo-100 p-4 pt-20">
         <div className="bg-white shadow-xl rounded-2xl w-full max-w-md p-6">
           <h2 className="text-2xl font-bold text-center mb-2">
             {role === "customer" ? "Customer Login" : "Merchant Login"}
