@@ -140,9 +140,9 @@ exports.customerLogin = async (req, res) => {
 
     const { userID, password } = req.body;
 
-    // Find user by customerID or email
+    // Find user by customerID, email, or username
     const user = await User.findOne({
-      $or: [{ customerID: userID }, { email: userID }],
+      $or: [{ customerID: userID }, { email: userID }, { username: userID }],
       role: 'customer'
     });
 
@@ -207,9 +207,9 @@ exports.merchantLogin = async (req, res) => {
 
     const { userID, password } = req.body;
 
-    // Find user by merchantID or email
+    // Find user by merchantID, email, or username
     const user = await User.findOne({
-      $or: [{ merchantID: userID }, { email: userID }],
+      $or: [{ merchantID: userID }, { email: userID }, { username: userID }],
       role: 'merchant'
     });
 

@@ -32,7 +32,6 @@ const StoreIcon = () => (
 const Signup = ({ onSwitch, onModeChange, onSuccess, onNavigate }) => {
   const [form, setForm] = useState({
     username: '',
-    customerID: '',
     phone: '',
     password: '',
     email: '',
@@ -52,7 +51,6 @@ const Signup = ({ onSwitch, onModeChange, onSuccess, onNavigate }) => {
         !form.phone.trim() ||
         !form.email.trim() ||
         !form.password.trim() ||
-        (role === 'customer' && !form.customerID.trim()) ||
         (role === 'merchant' && !form.merchantID.trim()) ||
         (role === 'merchant' && !form.storeName.trim())) {
       toast.error('Please fill in all required fields.');
@@ -108,7 +106,7 @@ const Signup = ({ onSwitch, onModeChange, onSuccess, onNavigate }) => {
             <button 
               type="button" 
               className={role === 'merchant' ? `${styles.toggleButton} ${styles.toggleButtonActive}` : styles.toggleButton} 
-              onClick={() => { setRole('merchant'); onSwitch && onSwitch('merchant'); }}
+              onClick={() => setRole('merchant')}
             >
               Merchant
             </button>
@@ -136,19 +134,22 @@ const Signup = ({ onSwitch, onModeChange, onSuccess, onNavigate }) => {
               </div>
             </div>
 
-            <div className={styles.inputGroup}>
-              <label className="block text-sm font-medium mb-1 text-gray-700">{role === 'customer' ? 'Customer ID' : 'Merchant ID'}</label>
-              <div className="relative">
-                <div className={styles.inputIcon}><IdIcon /></div>
-                <input 
-                  name={role === 'customer' ? 'customerID' : 'merchantID'} 
-                  placeholder={`Enter your ${role} ID`} 
-                  value={role === 'customer' ? form.customerID : form.merchantID} 
-                  onChange={handleChange}
-                  className={styles.inputWithIcon}
-                />
+            {/* Only show Merchant ID field for merchants */}
+            {role === 'merchant' && (
+              <div className={styles.inputGroup}>
+                <label className="block text-sm font-medium mb-1 text-gray-700">Merchant ID</label>
+                <div className="relative">
+                  <div className={styles.inputIcon}><IdIcon /></div>
+                  <input 
+                    name="merchantID" 
+                    placeholder="Enter your merchant ID" 
+                    value={form.merchantID} 
+                    onChange={handleChange}
+                    className={styles.inputWithIcon}
+                  />
+                </div>
               </div>
-            </div>
+            )}
 
             <div className={styles.inputGroup}>
               <label className="block text-sm font-medium mb-1 text-gray-700">Phone</label>

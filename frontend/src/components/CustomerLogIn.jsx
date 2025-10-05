@@ -122,7 +122,7 @@ const Login = ({ onSwitch, onNavigate, onSuccess }) => {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium mb-1">
-                {role === "customer" ? "Customer ID" : "Merchant ID"}
+                {role === "customer" ? "Username or Email" : "Email or Merchant ID"}
               </label>
               <div className="flex items-center border rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-purple-500">
                 <UserIcon />
@@ -131,7 +131,7 @@ const Login = ({ onSwitch, onNavigate, onSuccess }) => {
                   name="userID"
                   value={form.userID}
                   onChange={handleChange}
-                  placeholder={`Enter your ${role} ID`}
+                  placeholder={role === "customer" ? "Enter your username or email" : "Enter your email or merchant ID"}
                   className="flex-1 outline-none ml-2"
                 />
               </div>

@@ -41,12 +41,16 @@ const limiter = rateLimit({
 app.use('/api/', limiter);
 
 // CORS configuration
-const allowedOrigins = process.env.NODE_ENV === 'production' 
-  ? [
-      'https://fresh-finds-beige.vercel.app',
-      'https://fresh-finds-qd38bra7n-keshav-agrawals-projects-a527a22b.vercel.app'
-    ]
-  : ['http://localhost:5173', 'http://localhost:3000'];
+const allowedOrigins = process.env.ALLOWED_ORIGINS 
+  ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
+  : process.env.NODE_ENV === 'production' 
+    ? [
+        'https://fresh-finds-beige.vercel.app',
+        'https://fresh-finds-qd38bra7n-keshav-agrawals-projects-a527a22b.vercel.app'
+      ]
+    : ['http://localhost:5173', 'http://localhost:3000'];
+
+console.log('🌐 Allowed CORS Origins:', allowedOrigins);
 
 app.use(cors({
   origin: allowedOrigins,
