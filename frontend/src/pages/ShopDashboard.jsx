@@ -248,7 +248,7 @@ const ShopDashboard = ({ onNavigate, searchQuery = '', addToCart }) => {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
               <div>
                 <div className="flex items-center gap-2 mb-4">
-                  <span className="text-purple-400 text-2xl">🛒</span>
+                  <img src="/F-removebg-preview.png" alt="FreshFinds Logo" className="w-6 h-6" />
                   <span className="text-xl font-bold">FreshFinds</span>
                 </div>
                 <p className="text-slate-400">Your trusted partner for fresh, quality produce delivered right to your door.</p>

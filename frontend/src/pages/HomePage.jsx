@@ -128,7 +128,7 @@ const HomePage = ({ onNavigate }) => {
         <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
           <div className="flex flex-col items-center justify-between gap-6 md:flex-row">
             <div className="flex items-center gap-3">
-              <span className="text-purple-600 text-2xl">🌱</span>
+              <img src="/F-removebg-preview.png" alt="FreshFinds Logo" className="w-6 h-6" />
               <h2 className="text-lg font-bold text-gray-900 dark:text-white">FreshFinds</h2>
             </div>
             <div className="flex flex-wrap justify-center gap-x-6 gap-y-2">

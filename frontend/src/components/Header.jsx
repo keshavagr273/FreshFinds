@@ -24,7 +24,7 @@ const Header = ({ onNavigate, currentView = 'shop', onSearch, onLogout, user, ca
               onClick={() => onNavigate && onNavigate(role === 'merchant' ? 'overview' : 'home')}
               className="flex items-center gap-2 text-xl font-bold text-slate-900 hover:text-purple-600 transition-colors"
             >
-              <span className="text-purple-600 text-3xl">🛒</span>
+              <img src="/F-removebg-preview.png" alt="FreshFinds Logo" className="w-8 h-8" />
               FreshFinds
             </button>
             <nav className="hidden md:flex items-center gap-6">
