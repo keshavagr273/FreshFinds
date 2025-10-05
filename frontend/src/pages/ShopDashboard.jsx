@@ -18,104 +18,7 @@ const ShopDashboard = ({ onNavigate, searchQuery = '', addToCart }) => {
     { id: 'protein', name: 'Fresh Fish', icon: '🐟' }
   ];
 
-  const demoProducts = [
-    {
-      id: 1,
-      name: 'Fresh Organic Bananas',
-      price: 2.49,
-      originalPrice: 3.49,
-      discount: 29,
-      rating: 4.6,
-      image: getProductImage('fruits', 'banana'),
-      category: 'fruits',
-      freshness: 88,
-      expiryDays: 3
-    },
-    {
-      id: 2,
-      name: 'Fresh Tomatoes',
-      price: 3.99,
-      originalPrice: 5.99,
-      discount: 33,
-      rating: 4.7,
-      image: getProductImage('vegetables', 'tomato'),
-      category: 'vegetables',
-      freshness: 92,
-      expiryDays: 5
-    },
-    {
-      id: 3,
-      name: 'Artisan Bread',
-      price: 2.99,
-      originalPrice: 3.99,
-      discount: 25,
-      rating: 4.6,
-      image: getProductImage('bakery', 'bread'),
-      category: 'bakery',
-      freshness: 90,
-      expiryDays: 2
-    },
-    {
-      id: 4,
-      name: 'Fresh Farm Eggs',
-      price: 4.49,
-      originalPrice: 5.99,
-      discount: 25,
-      rating: 4.8,
-      image: getProductImage('dairy', 'egg'),
-      category: 'dairy',
-      freshness: 95,
-      expiryDays: 10
-    },
-    {
-      id: 5,
-      name: 'Fresh Atlantic Fish',
-      price: 12.99,
-      originalPrice: 16.99,
-      discount: 24,
-      rating: 4.9,
-      image: getProductImage('protein', 'fish'),
-      category: 'protein',
-      freshness: 94,
-      expiryDays: 1
-    },
-    {
-      id: 6,
-      name: 'Organic Whole Milk',
-      price: 3.99,
-      originalPrice: 4.99,
-      discount: 20,
-      rating: 4.5,
-      image: getProductImage('dairy', 'milk'),
-      category: 'dairy',
-      freshness: 92,
-      expiryDays: 7
-    },
-    {
-      id: 7,
-      name: 'Fresh Apples',
-      price: 2.99,
-      originalPrice: 4.49,
-      discount: 33,
-      rating: 4.7,
-      image: getProductImage('fruits', 'apple'),
-      category: 'fruits',
-      freshness: 89,
-      expiryDays: 5
-    },
-    {
-      id: 8,
-      name: 'Organic Carrots',
-      price: 1.99,
-      originalPrice: 2.99,
-      discount: 33,
-      rating: 4.4,
-      image: getProductImage('vegetables', 'carrot'),
-      category: 'vegetables',
-      freshness: 91,
-      expiryDays: 10
-    }
-  ];
+  // Removed demoProducts; we will only show real products from the API
 
   // Generate a stable pseudo-random freshness between 70 and 95 based on id
   const getFreshnessFromId = (id) => {
@@ -165,7 +68,7 @@ const ShopDashboard = ({ onNavigate, searchQuery = '', addToCart }) => {
     };
   });
 
-  const products = mappedRemote.length > 0 ? mappedRemote : demoProducts;
+  const products = mappedRemote;
 
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
@@ -177,13 +80,17 @@ const ShopDashboard = ({ onNavigate, searchQuery = '', addToCart }) => {
     const fetchProducts = async () => {
       try {
         setLoading(true);
+        const startedAt = Date.now();
         const res = await axios.get(`${baseURL}/products?limit=100`);
         const list = res.data?.data || [];
         setRemoteProducts(list);
+        // Ensure at least 1s loader visibility
+        const elapsed = Date.now() - startedAt;
+        const remaining = Math.max(0, 1000 - elapsed);
+        setTimeout(() => setLoading(false), remaining);
       } catch (e) {
         // keep demo fallback silently
         setRemoteProducts([]);
-      } finally {
         setLoading(false);
       }
     };
@@ -249,8 +156,26 @@ const ShopDashboard = ({ onNavigate, searchQuery = '', addToCart }) => {
               <p className="text-slate-600">{filteredProducts.length} products found {loading ? '(loading...)' : ''}</p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredProducts.map((product) => (
+            {loading ? (
+              <div className="flex items-center justify-center min-h-[60vh] w-full">
+                <div className="inline-flex items-center gap-4 text-slate-600">
+                  <span className="w-12 h-12 rounded-full border-4 border-slate-300 border-t-purple-600 animate-spin"></span>
+                  <span className="text-lg font-semibold">Loading products…</span>
+                </div>
+              </div>
+            ) : filteredProducts.length === 0 ? (
+              <div className="flex items-center justify-center min-h-[40vh]">
+                <div className="text-center">
+                  <div className="w-16 h-16 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center mx-auto mb-4">
+                    <span className="text-3xl">🛍️</span>
+                  </div>
+                  <h2 className="text-xl font-semibold text-slate-800 mb-1">No products available</h2>
+                  <p className="text-slate-500">Please check back later.</p>
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {filteredProducts.map((product) => (
                 <div key={product.id} className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
                   <div className="relative">
                     <img
@@ -312,7 +237,8 @@ const ShopDashboard = ({ onNavigate, searchQuery = '', addToCart }) => {
                   </div>
                 </div>
               ))}
-            </div>
+              </div>
+            )}
           </div>
         </main>
 

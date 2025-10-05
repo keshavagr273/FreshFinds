@@ -11,6 +11,7 @@ const MerchantMyProducts = () => {
   const origin = baseURL.replace(/\/api$/, '')
 
   const fetchMine = async () => {
+    const startedAt = Date.now()
     try {
       // Fetch all products, then filter by current merchant id
       const res = await axios.get(`${baseURL}/products?limit=100`, {
@@ -22,7 +23,10 @@ const MerchantMyProducts = () => {
     } catch (e) {
       toast.error('Failed to load products')
     } finally {
-      setLoading(false)
+      // Ensure loader is shown for at least 1 second
+      const elapsed = Date.now() - startedAt
+      const remaining = Math.max(0, 1000 - elapsed)
+      setTimeout(() => setLoading(false), remaining)
     }
   }
 
@@ -51,8 +55,25 @@ const MerchantMyProducts = () => {
           <a href="#" onClick={(e)=>{e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' })}} className="text-sm text-purple-600">Top</a>
         </div>
         {loading ? (
-          <div>Loading...</div>
+          <div className="flex items-center justify-center min-h-[60vh] w-full">
+            <div className="inline-flex items-center gap-4 text-slate-600">
+              <span className="w-12 h-12 rounded-full border-4 border-slate-300 border-t-purple-600 animate-spin"></span>
+              <span className="text-lg font-semibold">Loading your products…</span>
+            </div>
+          </div>
         ) : (
+          products.length === 0 ? (
+            <div className="flex items-center justify-center min-h-[50vh]">
+              <div className="text-center">
+                <div className="w-16 h-16 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center mx-auto mb-4">
+                  <span className="text-3xl">📦</span>
+                </div>
+                <h2 className="text-xl font-semibold text-slate-800 mb-1">No products yet</h2>
+                <p className="text-slate-500 mb-4">Start by adding your first product to showcase in your store.</p>
+                <button onClick={() => window && window.dispatchEvent(new CustomEvent('navigate', { detail: 'merchant-add-product' }))} className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">Add Product</button>
+              </div>
+            </div>
+          ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {products.map(p => (
               <div key={p._id} className="border rounded-xl p-4 bg-white border-slate-200">
@@ -74,7 +95,7 @@ const MerchantMyProducts = () => {
               </div>
             ))}
           </div>
-        )}
+        ))}
       </div>
     </div>
   )

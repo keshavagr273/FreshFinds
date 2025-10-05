@@ -21,7 +21,7 @@ const Header = ({ onNavigate, currentView = 'shop', onSearch, onLogout, user, ca
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center gap-6">
             <button 
-              onClick={() => onNavigate && onNavigate('home')}
+              onClick={() => onNavigate && onNavigate(role === 'merchant' ? 'overview' : 'home')}
               className="flex items-center gap-2 text-xl font-bold text-slate-900 hover:text-purple-600 transition-colors"
             >
               <span className="text-purple-600 text-3xl">🛒</span>
@@ -52,19 +52,21 @@ const Header = ({ onNavigate, currentView = 'shop', onSearch, onLogout, user, ca
                   </button>
                 </>
               )}
-              <button 
-                onClick={() => onNavigate && onNavigate('analyzer')}
-                className={`relative flex items-center gap-1 text-sm font-medium transition-colors pr-8 ${
-                  currentView === 'analyzer' 
-                    ? 'text-purple-600' 
-                    : 'text-slate-600 hover:text-purple-600'
-                }`}
-                title="AI-Powered Freshness Analysis"
-              >
-                <span className="text-yellow-500">⭐</span>
-                Fruitify
-                <span className="absolute -top-2 -right-0 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs px-1.5 py-0.5 rounded-full font-bold animate-pulse">NEW</span>
-              </button>
+              {role !== 'merchant' && (
+                <button 
+                  onClick={() => onNavigate && onNavigate('analyzer')}
+                  className={`relative flex items-center gap-1 text-sm font-medium transition-colors pr-8 ${
+                    currentView === 'analyzer' 
+                      ? 'text-purple-600' 
+                      : 'text-slate-600 hover:text-purple-600'
+                  }`}
+                  title="AI-Powered Freshness Analysis"
+                >
+                  <span className="text-yellow-500">⭐</span>
+                  Fruitify
+                  <span className="absolute -top-2 -right-0 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs px-1.5 py-0.5 rounded-full font-bold animate-pulse">NEW</span>
+                </button>
+              )}
               {isAuthenticated && role === 'merchant' && (
                 <>
                   <button 

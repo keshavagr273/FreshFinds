@@ -38,7 +38,7 @@ function App() {
         // Direct to appropriate landing based on role
         const savedRole = parsedUser?.role || localStorage.getItem('userRole')
         if (savedRole === 'merchant') {
-          setCurrentView('analyzer')
+          setCurrentView('overview')
         } else {
           setCurrentView('home')
         }
@@ -60,7 +60,7 @@ function App() {
     setIsAuthenticated(true)
     // Navigate based on role immediately after auth
     if (userData?.role === 'merchant') {
-      setCurrentView('analyzer')
+      setCurrentView('overview')
     } else {
       setCurrentView('home')
     }
@@ -121,7 +121,7 @@ function App() {
     }
     // Role-based guards
     if (role === 'merchant' && (targetView === 'home' || targetView === 'shop')) {
-      setCurrentView('analyzer')
+      setCurrentView('overview')
       return
     }
     if (role !== 'merchant' && (targetView === 'overview' || targetView === 'product' || targetView === 'merchant-add-product' || targetView === 'merchant-my-products')) {
