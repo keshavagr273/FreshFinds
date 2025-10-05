@@ -57,11 +57,13 @@ src/
 ## Getting Started
 
 1. Install dependencies:
+
    ```bash
    npm install
    ```
 
 2. Start the development server:
+
    ```bash
    npm run dev
    ```
@@ -70,6 +72,43 @@ src/
    ```bash
    npm run build
    ```
+
+## Deploying to Vercel
+
+This repository is configured to deploy only the frontend (`FreshFinds/frontend`) to Vercel as a static site built by Vite. The backend (`FreshFinds/backend`) should be deployed to a Node host (e.g., Render, Railway, Fly.io) because it uses local uploads and Socket.IO which are not suitable for Vercel's serverless filesystem.
+
+### Steps
+
+1. Push the repository to GitHub/GitLab/Bitbucket.
+2. In Vercel, import the repository. The root `vercel.json` instructs Vercel to build `FreshFinds/frontend`.
+3. Vercel will build with:
+   - Build Command: `npm run build`
+   - Output Directory: `dist`
+
+### Required Environment Variables (Vercel)
+
+Set these for the frontend project in Vercel:
+
+- `VITE_API_BASE_URL`: Your backend API base, e.g. `https://your-backend.example.com/api`
+
+Optional (if you use cross-origin sockets or want links rendered correctly):
+
+- `VITE_SOCKET_ORIGIN`: Origin for Socket.IO server, e.g. `https://your-backend.example.com`
+
+### Backend deployment notes
+
+- The backend writes uploads to a local `uploads/` directory via `multer`. In serverless environments like Vercel, this storage is ephemeral. Use a persistent storage service (e.g., S3, Cloudinary) or deploy to a persistent Node host.
+- Configure these environment variables on your backend host:
+  - `MONGODB_URI`
+  - `JWT_SECRET`
+  - `ALLOWED_ORIGINS` (comma-separated; include your Vercel domain)
+  - `FRONTEND_URL` (your Vercel domain)
+
+### Local development
+
+- Start backend: `cd FreshFinds/backend && npm i && npm run dev`
+- Start frontend: `cd FreshFinds/frontend && npm i && npm run dev`
+- Set `VITE_API_BASE_URL=http://localhost:3000/api` for the frontend.
 
 ## Dependencies
 
