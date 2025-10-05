@@ -36,9 +36,9 @@ const ProductDashboard = ({ onNavigate, searchQuery = '', addToCart }) => {
 
   const relatedProducts = [
     { id: 2, name: 'Fresh Organic Bananas', price: 2.49, image: getProductImage('fruits', 'banana') },
-    { id: 3, name: 'Fresh Tomatoes', price: 3.99, image: getProductImage('vegetables', 'tomato') },
-    { id: 4, name: 'Farm Fresh Eggs', price: 4.49, image: getProductImage('dairy', 'egg') },
-    { id: 5, name: 'Atlantic Fresh Fish', price: 12.99, image: getProductImage('protein', 'fish') }
+    { id: 6, name: 'Organic Whole Milk', price: 3.99, image: getProductImage('dairy', 'milk') },
+    { id: 7, name: 'Fresh Green Apples', price: 2.99, image: getProductImage('fruits', 'green apple') },
+    { id: 8, name: 'Organic Carrots', price: 1.99, image: getProductImage('vegetables', 'carrot') }
   ];
 
   const handleAddToCart = () => {

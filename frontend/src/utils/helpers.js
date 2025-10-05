@@ -3,22 +3,28 @@
 // Import actual images from assets
 import bananaImg from '../assets/banana.jpg';
 import breadImg from '../assets/bread.jpg';
+import carrotsImg from '../assets/carrots.jpg';
 import eggImg from '../assets/egg.jpg';
 import femaleImg from '../assets/female.jpg';
 import female30Img from '../assets/female_30.jpg';
 import fishImg from '../assets/fish.jpg';
+import greenAppleImg from '../assets/green_apple.jpg';
 import ladyImg from '../assets/lady.jpg';
+import milkImg from '../assets/milk.jpeg';
 import tomatoImg from '../assets/tomato.jpg';
 
 // Product image mapping
 const productImages = {
   banana: bananaImg,
   bread: breadImg,
+  carrots: carrotsImg,
   egg: eggImg,
   female: femaleImg,
   female_30: female30Img,
   fish: fishImg,
+  greenApple: greenAppleImg,
   lady: ladyImg,
+  milk: milkImg,
   tomato: tomatoImg,
 };
 
@@ -29,24 +35,27 @@ export const getProductImage = (category, productName) => {
   
   if (lowerProductName.includes('banana')) return productImages.banana;
   if (lowerProductName.includes('bread')) return productImages.bread;
+  if (lowerProductName.includes('carrot')) return productImages.carrots;
   if (lowerProductName.includes('egg')) return productImages.egg;
   if (lowerProductName.includes('fish')) return productImages.fish;
+  if (lowerProductName.includes('green apple') || lowerProductName.includes('apple')) return productImages.greenApple;
+  if (lowerProductName.includes('milk')) return productImages.milk;
   if (lowerProductName.includes('tomato')) return productImages.tomato;
   
   // Fallback by category
   switch (category) {
     case 'fruits':
-      return productImages.banana;
+      return productImages.greenApple; // Changed from banana to green apple
     case 'vegetables':
-      return productImages.tomato;
+      return productImages.carrots; // Changed from tomato to carrots
     case 'bakery':
       return productImages.bread;
     case 'dairy':
-      return productImages.egg;
+      return productImages.milk; // Changed from egg to milk
     case 'protein':
       return productImages.fish;
     default:
-      return productImages.banana; // Default fallback
+      return productImages.greenApple; // Default fallback
   }
 };
 
