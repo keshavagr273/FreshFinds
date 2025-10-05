@@ -77,6 +77,26 @@ const Header = ({ onNavigate, currentView = 'shop', onSearch, onLogout, user, ca
                   >
                     Dashboard
                   </button>
+                  <button 
+                    onClick={() => onNavigate && onNavigate('merchant-my-products')}
+                    className={`text-sm font-medium transition-colors ${
+                      currentView === 'merchant-my-products' 
+                        ? 'text-purple-600' 
+                        : 'text-slate-600 hover:text-purple-600'
+                    }`}
+                  >
+                    My Products
+                  </button>
+                  <button 
+                    onClick={() => onNavigate && onNavigate('merchant-add-product')}
+                    className={`text-sm font-medium transition-colors ${
+                      currentView === 'merchant-add-product' 
+                        ? 'text-purple-600' 
+                        : 'text-slate-600 hover:text-purple-600'
+                    }`}
+                  >
+                    Add Product
+                  </button>
                 </>
               )}
               {isAuthenticated && (

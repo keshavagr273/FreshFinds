@@ -107,9 +107,55 @@ const Account = ({ onNavigate, user, onUpdateUser }) => {
     document.getElementById('photo-upload').click();
   };
 
-  const handleSaveChanges = () => {
-    console.log('Saving changes:', formData);
-    // Add save logic here
+  const handleSaveChanges = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      toast.error('Please log in to update your account');
+      return;
+    }
+    const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
+
+    try {
+      // 1) Update profile (username/phone)
+      const profilePayload = {
+        username: formData.fullName,
+        phone: formData.phoneNumber
+      };
+      const profileRes = await axios.put(`${baseURL}/users/profile`, profilePayload, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (profileRes.data?.success) {
+        if (onUpdateUser) onUpdateUser(profileRes.data.data);
+        localStorage.setItem('user', JSON.stringify(profileRes.data.data));
+      }
+
+      // 2) Change password if provided
+      if (formData.newPassword) {
+        if (formData.newPassword.length < 6) {
+          toast.error('New password must be at least 6 characters');
+          return;
+        }
+        if (formData.newPassword !== formData.confirmPassword) {
+          toast.error('New password and confirm password do not match');
+          return;
+        }
+        const passRes = await axios.put(`${baseURL}/users/password`, {
+          currentPassword: formData.currentPassword,
+          newPassword: formData.newPassword
+        }, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (passRes.data?.success) {
+          toast.success('Password changed successfully');
+          setFormData(prev => ({ ...prev, currentPassword: '', newPassword: '', confirmPassword: '' }));
+        }
+      }
+
+      toast.success('Profile updated');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to update account');
+    }
   };
 
   const tabs = [

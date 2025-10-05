@@ -1,5 +1,24 @@
 const Product = require('../models/Product');
 const FreshnessAnalysis = require('../models/FreshnessAnalysis');
+const cloudinary = require('cloudinary').v2;
+
+async function uploadBufferToCloudinary(buffer, folder, altName) {
+  return await new Promise((resolve, reject) => {
+    cloudinary.uploader.upload_stream(
+      {
+        resource_type: 'image',
+        folder,
+        transformation: [
+          { quality: 'auto', fetch_format: 'auto' }
+        ]
+      },
+      (error, result) => {
+        if (error) return reject(error);
+        resolve({ url: result.secure_url, publicId: result.public_id, alt: altName });
+      }
+    ).end(buffer);
+  });
+}
 
 // Get all products
 exports.getAllProducts = async (req, res) => {
@@ -192,13 +211,12 @@ exports.createProduct = async (req, res) => {
       merchant: req.user._id
     };
 
-    // Handle uploaded images
+    // Handle uploaded images (Cloudinary via memory buffers)
     if (req.files && req.files.length > 0) {
-      productData.images = req.files.map(file => ({
-        url: file.path,
-        publicId: file.filename,
-        alt: req.body.name
-      }));
+      const uploads = await Promise.all(
+        req.files.map(f => uploadBufferToCloudinary(f.buffer, 'freshmart/products', req.body.name))
+      );
+      productData.images = uploads;
     }
 
     const product = new Product(productData);
@@ -364,13 +382,10 @@ exports.addProductImages = async (req, res) => {
     }
 
     if (req.files && req.files.length > 0) {
-      const newImages = req.files.map(file => ({
-        url: file.path,
-        publicId: file.filename,
-        alt: product.name
-      }));
-
-      product.images.push(...newImages);
+      const uploads = await Promise.all(
+        req.files.map(f => uploadBufferToCloudinary(f.buffer, 'freshmart/products', product.name))
+      );
+      product.images.push(...uploads);
       await product.save();
     }
 

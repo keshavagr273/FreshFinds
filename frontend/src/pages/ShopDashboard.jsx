@@ -1,8 +1,13 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import axios from 'axios';
 import { getProductImage } from '../utils/helpers';
 
 const ShopDashboard = ({ onNavigate, searchQuery = '', addToCart }) => {
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [remoteProducts, setRemoteProducts] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const baseURL = useMemo(() => (import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api'), []);
+  const origin = useMemo(() => baseURL.replace(/\/api$/, ''), [baseURL]);
 
   const categories = [
     { id: 'all', name: 'All Categories', icon: '📋' },
@@ -13,7 +18,7 @@ const ShopDashboard = ({ onNavigate, searchQuery = '', addToCart }) => {
     { id: 'protein', name: 'Fresh Fish', icon: '🐟' }
   ];
 
-  const products = [
+  const demoProducts = [
     {
       id: 1,
       name: 'Fresh Organic Bananas',
@@ -112,11 +117,78 @@ const ShopDashboard = ({ onNavigate, searchQuery = '', addToCart }) => {
     }
   ];
 
+  // Generate a stable pseudo-random freshness between 70 and 95 based on id
+  const getFreshnessFromId = (id) => {
+    const s = String(id || '');
+    let hash = 0;
+    for (let i = 0; i < s.length; i++) {
+      hash = (hash * 31 + s.charCodeAt(i)) >>> 0;
+    }
+    const range = 26; // 70..95 inclusive
+    return 50 + (hash % range);
+  };
+
+  // Stable pseudo-random rating between 3.2 and 4.7 based on id
+  const getRatingFromId = (id) => {
+    const s = String(id || '');
+    let hash = 0;
+    for (let i = 0; i < s.length; i++) {
+      hash = (hash * 131 + s.charCodeAt(i)) >>> 0;
+    }
+    const min = 3.2;
+    const max = 4.7;
+    const frac = (hash % 1000) / 1000; // 0..1
+    const val = min + frac * (max - min);
+    // round to nearest 0.1 for nicer display
+    return Math.round(val * 10) / 10;
+  };
+
+  // Map backend products into UI shape
+  const mappedRemote = remoteProducts.map(p => {
+    const raw = p.images?.[0]?.url || '';
+    const normalized = raw.replace(/\\\\/g, '/').replace(/\\/g, '/');
+    const img = normalized.startsWith('http') ? normalized : (normalized ? `${origin}/${normalized.startsWith('/') ? normalized.slice(1) : normalized}` : getProductImage(p.category || 'fruits', 'banana'));
+    const originalPrice = Number(p.price) || 0;
+    const discountPct = Number(p.discount) || 0;
+    const finalPrice = Math.max(0, originalPrice - (originalPrice * discountPct) / 100);
+    return {
+      id: p._id,
+      name: p.name,
+      price: Number(finalPrice.toFixed(2)),
+      originalPrice: originalPrice,
+      discount: discountPct,
+      rating: getRatingFromId(p._id || p.name),
+      image: img,
+      category: p.category || 'fruits',
+      freshness: getFreshnessFromId(p._id || p.name),
+      expiryDays: 5
+    };
+  });
+
+  const products = mappedRemote.length > 0 ? mappedRemote : demoProducts;
+
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
+        const res = await axios.get(`${baseURL}/products?limit=100`);
+        const list = res.data?.data || [];
+        setRemoteProducts(list);
+      } catch (e) {
+        // keep demo fallback silently
+        setRemoteProducts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProducts();
+  }, [baseURL]);
 
   return (
     <div className="bg-gradient-to-br from-blue-50 to-purple-50 font-display text-slate-800 min-h-screen">
@@ -174,7 +246,7 @@ const ShopDashboard = ({ onNavigate, searchQuery = '', addToCart }) => {
               <h2 className="text-2xl font-bold text-slate-900">
                 {selectedCategory === 'all' ? 'All Products' : categories.find(c => c.id === selectedCategory)?.name}
               </h2>
-              <p className="text-slate-600">{filteredProducts.length} products found</p>
+              <p className="text-slate-600">{filteredProducts.length} products found {loading ? '(loading...)' : ''}</p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -198,8 +270,25 @@ const ShopDashboard = ({ onNavigate, searchQuery = '', addToCart }) => {
                     <h3 className="font-semibold text-slate-900 mb-2">{product.name}</h3>
                     
                     <div className="flex items-center gap-1 mb-2">
-                      <div className="flex text-yellow-400">
-                        {'★'.repeat(Math.floor(product.rating))}
+                      <div className="flex">
+                        {(() => {
+                          const stars = [];
+                          for (let i = 1; i <= 5; i++) {
+                            if (product.rating >= i) {
+                              stars.push(<span key={i} className="text-yellow-400">★</span>);
+                            } else if (product.rating > i - 1 && product.rating < i && (product.rating - (i - 1)) >= 0.5) {
+                              stars.push(
+                                <span key={i} className="relative inline-block w-4 h-4 align-middle">
+                                  <span className="absolute inset-0 text-slate-300">☆</span>
+                                  <span className="absolute inset-0 text-yellow-400 overflow-hidden" style={{ width: '50%' }}>★</span>
+                                </span>
+                              );
+                            } else {
+                              stars.push(<span key={i} className="text-slate-300">☆</span>);
+                            }
+                          }
+                          return stars;
+                        })()}
                       </div>
                       <span className="text-sm text-slate-600">({product.rating})</span>
                     </div>
