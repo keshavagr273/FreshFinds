@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import axios from 'axios'
 import { toast } from 'react-toastify'
 
-const MerchantMyProducts = () => {
+const MerchantMyProducts = ({ onNavigate }) => {
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const token = localStorage.getItem('token')
@@ -70,7 +70,7 @@ const MerchantMyProducts = () => {
                 </div>
                 <h2 className="text-xl font-semibold text-slate-800 mb-1">No products yet</h2>
                 <p className="text-slate-500 mb-4">Start by adding your first product to showcase in your store.</p>
-                <button onClick={() => window && window.dispatchEvent(new CustomEvent('navigate', { detail: 'merchant-add-product' }))} className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">Add Product</button>
+                <button onClick={() => onNavigate && onNavigate('merchant-add-product')} className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">Add Product</button>
               </div>
             </div>
           ) : (

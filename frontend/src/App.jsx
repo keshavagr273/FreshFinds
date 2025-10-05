@@ -171,7 +171,7 @@ function App() {
       case 'merchant-add-product':
         return isAuthenticated && role === 'merchant' ? <MerchantAddProduct onNavigate={handleNavigation} /> : <CustomerLogIn onSwitch={() => setCurrentView('signup')} onNavigate={handleNavigation} onSuccess={handleLogin} />
       case 'merchant-my-products':
-        return isAuthenticated && role === 'merchant' ? <MerchantMyProducts /> : <CustomerLogIn onSwitch={() => setCurrentView('signup')} onNavigate={handleNavigation} onSuccess={handleLogin} />
+        return isAuthenticated && role === 'merchant' ? <MerchantMyProducts onNavigate={handleNavigation} /> : <CustomerLogIn onSwitch={() => setCurrentView('signup')} onNavigate={handleNavigation} onSuccess={handleLogin} />
       default:
         return <HomePage onNavigate={handleNavigation} />
     }
