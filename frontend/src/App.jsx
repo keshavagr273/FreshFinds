@@ -21,6 +21,7 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [user, setUser] = useState(null)
   const [cartItems, setCartItems] = useState([])
+  const role = (user && user.role) || localStorage.getItem('userRole')
 
   // Check if user is already logged in
   useEffect(() => {
@@ -32,7 +33,13 @@ function App() {
         const parsedUser = JSON.parse(savedUser)
         setUser(parsedUser)
         setIsAuthenticated(true)
-        setCurrentView('home')
+        // Direct to appropriate landing based on role
+        const savedRole = parsedUser?.role || localStorage.getItem('userRole')
+        if (savedRole === 'merchant') {
+          setCurrentView('analyzer')
+        } else {
+          setCurrentView('home')
+        }
       } catch (error) {
         // Invalid saved data, clear it
         localStorage.removeItem('token')
@@ -49,6 +56,12 @@ function App() {
   const handleLogin = (userData) => {
     setUser(userData)
     setIsAuthenticated(true)
+    // Navigate based on role immediately after auth
+    if (userData?.role === 'merchant') {
+      setCurrentView('analyzer')
+    } else {
+      setCurrentView('home')
+    }
   }
 
   const handleUpdateUser = (updatedUserData) => {
@@ -104,7 +117,16 @@ function App() {
       setCurrentView('login')
       return
     }
-    
+    // Role-based guards
+    if (role === 'merchant' && (targetView === 'home' || targetView === 'shop')) {
+      setCurrentView('analyzer')
+      return
+    }
+    if (role !== 'merchant' && (targetView === 'overview' || targetView === 'product')) {
+      setCurrentView('home')
+      return
+    }
+
     // Allow navigation to the target view
     setCurrentView(targetView)
   }
@@ -114,13 +136,15 @@ function App() {
       case 'home':
         return <HomePage onNavigate={handleNavigation} />
       case 'login':
-        return (
-          <CustomerLogIn 
-            onSwitch={() => setCurrentView('signup')} 
-            onNavigate={handleNavigation}
-            onSuccess={handleLogin}
-          />
-        )
+        return isAuthenticated
+          ? (role === 'merchant' ? <FreshnessAnalyzer onNavigate={handleNavigation} /> : <HomePage onNavigate={handleNavigation} />)
+          : (
+            <CustomerLogIn 
+              onSwitch={() => setCurrentView('signup')} 
+              onNavigate={handleNavigation}
+              onSuccess={handleLogin}
+            />
+          )
       case 'signup':
         return (
           <CustomerSignUp 
