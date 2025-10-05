@@ -14,6 +14,8 @@ import ShopDashboardOverview from './pages/ShopDashboardOverview'
 import ProductDashboard from './pages/ProductDashboard'
 import HomePage from './pages/HomePage'
 import Account from './pages/Account'
+import MerchantAddProduct from './pages/MerchantAddProduct'
+import MerchantMyProducts from './pages/MerchantMyProducts'
 
 function App() {
   const [currentView, setCurrentView] = useState('home')
@@ -21,6 +23,7 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [user, setUser] = useState(null)
   const [cartItems, setCartItems] = useState([])
+  const role = (user && user.role) || localStorage.getItem('userRole')
 
   // Check if user is already logged in
   useEffect(() => {
@@ -32,7 +35,13 @@ function App() {
         const parsedUser = JSON.parse(savedUser)
         setUser(parsedUser)
         setIsAuthenticated(true)
-        setCurrentView('home')
+        // Direct to appropriate landing based on role
+        const savedRole = parsedUser?.role || localStorage.getItem('userRole')
+        if (savedRole === 'merchant') {
+          setCurrentView('analyzer')
+        } else {
+          setCurrentView('home')
+        }
       } catch (error) {
         // Invalid saved data, clear it
         localStorage.removeItem('token')
@@ -49,6 +58,12 @@ function App() {
   const handleLogin = (userData) => {
     setUser(userData)
     setIsAuthenticated(true)
+    // Navigate based on role immediately after auth
+    if (userData?.role === 'merchant') {
+      setCurrentView('analyzer')
+    } else {
+      setCurrentView('home')
+    }
   }
 
   const handleUpdateUser = (updatedUserData) => {
@@ -97,14 +112,23 @@ function App() {
 
   const handleNavigation = (targetView) => {
     // Pages that require authentication
-    const protectedPages = ['shop', 'account', 'cart', 'analyzer', 'overview', 'product']
+    const protectedPages = ['shop', 'account', 'cart', 'analyzer', 'overview', 'product', 'merchant-add-product', 'merchant-my-products']
     
     if (protectedPages.includes(targetView) && !isAuthenticated) {
       // Redirect to login if trying to access protected page without authentication
       setCurrentView('login')
       return
     }
-    
+    // Role-based guards
+    if (role === 'merchant' && (targetView === 'home' || targetView === 'shop')) {
+      setCurrentView('analyzer')
+      return
+    }
+    if (role !== 'merchant' && (targetView === 'overview' || targetView === 'product' || targetView === 'merchant-add-product' || targetView === 'merchant-my-products')) {
+      setCurrentView('home')
+      return
+    }
+
     // Allow navigation to the target view
     setCurrentView(targetView)
   }
@@ -114,13 +138,15 @@ function App() {
       case 'home':
         return <HomePage onNavigate={handleNavigation} />
       case 'login':
-        return (
-          <CustomerLogIn 
-            onSwitch={() => setCurrentView('signup')} 
-            onNavigate={handleNavigation}
-            onSuccess={handleLogin}
-          />
-        )
+        return isAuthenticated
+          ? (role === 'merchant' ? <FreshnessAnalyzer onNavigate={handleNavigation} /> : <HomePage onNavigate={handleNavigation} />)
+          : (
+            <CustomerLogIn 
+              onSwitch={() => setCurrentView('signup')} 
+              onNavigate={handleNavigation}
+              onSuccess={handleLogin}
+            />
+          )
       case 'signup':
         return (
           <CustomerSignUp 
@@ -142,6 +168,10 @@ function App() {
         return isAuthenticated ? <ShopDashboardOverview onNavigate={handleNavigation} /> : <CustomerLogIn onSwitch={() => setCurrentView('signup')} onNavigate={handleNavigation} onSuccess={handleLogin} />
       case 'product':
         return isAuthenticated ? <ProductDashboard onNavigate={handleNavigation} searchQuery={searchQuery} addToCart={addToCart} /> : <CustomerLogIn onSwitch={() => setCurrentView('signup')} onNavigate={handleNavigation} onSuccess={handleLogin} />
+      case 'merchant-add-product':
+        return isAuthenticated && role === 'merchant' ? <MerchantAddProduct onNavigate={handleNavigation} /> : <CustomerLogIn onSwitch={() => setCurrentView('signup')} onNavigate={handleNavigation} onSuccess={handleLogin} />
+      case 'merchant-my-products':
+        return isAuthenticated && role === 'merchant' ? <MerchantMyProducts /> : <CustomerLogIn onSwitch={() => setCurrentView('signup')} onNavigate={handleNavigation} onSuccess={handleLogin} />
       default:
         return <HomePage onNavigate={handleNavigation} />
     }

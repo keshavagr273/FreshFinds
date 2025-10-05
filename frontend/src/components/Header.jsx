@@ -3,6 +3,7 @@ import { getUserAvatar } from '../utils/helpers';
 
 const Header = ({ onNavigate, currentView = 'shop', onSearch, onLogout, user, cartItems = [], isAuthenticated = false }) => {
   const [searchQuery, setSearchQuery] = useState('');
+  const role = (user && user.role) || localStorage.getItem('userRole');
   
   const cartItemCount = cartItems.reduce((total, item) => total + item.quantity, 0);
 
@@ -27,26 +28,30 @@ const Header = ({ onNavigate, currentView = 'shop', onSearch, onLogout, user, ca
               FreshFinds
             </button>
             <nav className="hidden md:flex items-center gap-6">
-              <button 
-                onClick={() => onNavigate && onNavigate('home')}
-                className={`text-sm font-medium transition-colors ${
-                  currentView === 'home' 
-                    ? 'text-purple-600' 
-                    : 'text-slate-600 hover:text-purple-600'
-                }`}
-              >
-                Home
-              </button>
-              <button 
-                onClick={() => onNavigate && onNavigate('shop')}
-                className={`text-sm font-medium transition-colors ${
-                  currentView === 'shop' || currentView === 'product'
-                    ? 'text-purple-600' 
-                    : 'text-slate-600 hover:text-purple-600'
-                }`}
-              >
-                Browse
-              </button>
+              {role !== 'merchant' && (
+                <>
+                  <button 
+                    onClick={() => onNavigate && onNavigate('home')}
+                    className={`text-sm font-medium transition-colors ${
+                      currentView === 'home' 
+                        ? 'text-purple-600' 
+                        : 'text-slate-600 hover:text-purple-600'
+                    }`}
+                  >
+                    Home
+                  </button>
+                  <button 
+                    onClick={() => onNavigate && onNavigate('shop')}
+                    className={`text-sm font-medium transition-colors ${
+                      currentView === 'shop' || currentView === 'product'
+                        ? 'text-purple-600' 
+                        : 'text-slate-600 hover:text-purple-600'
+                    }`}
+                  >
+                    Browse
+                  </button>
+                </>
+              )}
               <button 
                 onClick={() => onNavigate && onNavigate('analyzer')}
                 className={`relative flex items-center gap-1 text-sm font-medium transition-colors pr-8 ${
@@ -60,7 +65,7 @@ const Header = ({ onNavigate, currentView = 'shop', onSearch, onLogout, user, ca
                 Fruitify
                 <span className="absolute -top-2 -right-0 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs px-1.5 py-0.5 rounded-full font-bold animate-pulse">NEW</span>
               </button>
-              {isAuthenticated && (
+              {isAuthenticated && role === 'merchant' && (
                 <>
                   <button 
                     onClick={() => onNavigate && onNavigate('overview')}
@@ -73,22 +78,44 @@ const Header = ({ onNavigate, currentView = 'shop', onSearch, onLogout, user, ca
                     Dashboard
                   </button>
                   <button 
-                    onClick={() => onNavigate && onNavigate('account')}
+                    onClick={() => onNavigate && onNavigate('merchant-my-products')}
                     className={`text-sm font-medium transition-colors ${
-                      currentView === 'account' 
+                      currentView === 'merchant-my-products' 
                         ? 'text-purple-600' 
                         : 'text-slate-600 hover:text-purple-600'
                     }`}
                   >
-                    Account
+                    My Products
+                  </button>
+                  <button 
+                    onClick={() => onNavigate && onNavigate('merchant-add-product')}
+                    className={`text-sm font-medium transition-colors ${
+                      currentView === 'merchant-add-product' 
+                        ? 'text-purple-600' 
+                        : 'text-slate-600 hover:text-purple-600'
+                    }`}
+                  >
+                    Add Product
                   </button>
                 </>
+              )}
+              {isAuthenticated && (
+                <button 
+                  onClick={() => onNavigate && onNavigate('account')}
+                  className={`text-sm font-medium transition-colors ${
+                    currentView === 'account' 
+                      ? 'text-purple-600' 
+                      : 'text-slate-600 hover:text-purple-600'
+                  }`}
+                >
+                  Account
+                </button>
               )}
             </nav>
           </div>
           
           <div className="flex items-center gap-4">
-            {isAuthenticated && (
+            {isAuthenticated && role !== 'merchant' && (
               <div className="relative hidden sm:block">
                 <input
                   type="text"
@@ -103,7 +130,7 @@ const Header = ({ onNavigate, currentView = 'shop', onSearch, onLogout, user, ca
               </div>
             )}
             
-            {isAuthenticated && (
+            {isAuthenticated && role !== 'merchant' && (
               <button 
                 onClick={() => onNavigate && onNavigate('cart')}
                 className="relative p-2 text-slate-600 hover:text-purple-600 transition-colors"

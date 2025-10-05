@@ -78,13 +78,15 @@ const Signup = ({ onSwitch, onModeChange, onSuccess, onNavigate }) => {
       const res = await axios.post(endpoint, form);
       if (onSuccess && res.data.user) {
         toast.success('Signup successful!');
-        onSuccess(res.data.user);
-        // Navigate to appropriate page after successful signup
-        if (role === 'customer') {
-          onNavigate && onNavigate('home');
-        } else {
-          onNavigate && onNavigate('overview');
+        // Persist auth if token provided
+        if (res.data.token) {
+          localStorage.setItem('token', res.data.token);
         }
+        localStorage.setItem('user', JSON.stringify(res.data.user));
+        if (res.data.user?.role) {
+          localStorage.setItem('userRole', res.data.user.role);
+        }
+        onSuccess(res.data.user);
       } else {
         toast.error(res.data.message);
       }

@@ -63,16 +63,9 @@ const Login = ({ onSwitch, onNavigate, onSuccess }) => {
         
         toast.success('Login successful!');
         
-        // Call onSuccess callback if provided
+        // Call onSuccess callback; App will handle redirect based on role
         if (onSuccess) {
           onSuccess(res.data.user);
-        }
-        
-        // Navigate to appropriate page
-        if (role === "customer") {
-          onNavigate && onNavigate('home');
-        } else {
-          onNavigate && onNavigate('overview');
         }
       } else {
         toast.error(res.data.message || 'Login failed');
