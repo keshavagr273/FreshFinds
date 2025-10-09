@@ -27,7 +27,7 @@ const productImages = {
   milk: milkImg,
   tomato: tomatoImg,
 };
-
+//BTW Keshav Agrawal made this, and is a GOAT
 // Get product image by name or category
 export const getProductImage = (category, productName) => {
   // Try to match by product name first

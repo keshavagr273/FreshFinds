@@ -31,7 +31,6 @@ Every day, tons of edible food go to waste due to overproduction or unsold stock
 
 ---
 
-
 ## ⚙️ Installation & Setup
 
 Follow these simple steps to set up **FreshFinds** locally:
@@ -46,13 +45,7 @@ git clone https://github.com/keshavagr273/FreshFinds.git
 cd FreshFinds
 ```
 
-### 3. Open the Project
-You can open the project in your preferred editor (like VS Code):
-```bash
-code .
-```
-
-### 4. Run the Project
+### 3. Run the Project
 Simply open the `index.html` file in your browser to start using FreshFinds.  
 If you're using VS Code, you can use the Live Server extension for a smoother experience.
 
@@ -102,14 +95,6 @@ If you’d like to **add new features**, **fix bugs**, or **improve existing fun
 
 ---
 
-## 🧩 Code of Conduct
-
-By contributing to this project, you agree to:
-- Be respectful and inclusive toward all contributors.
-- Avoid any kind of discrimination or harassment.
-- Ensure that your contributions are helpful and clearly documented.
-
----
 
 ## 🐞 Reporting Issues
 
@@ -152,7 +137,12 @@ THE SOFTWARE.
 ## 📫 Contact
 
 For queries or collaboration opportunities:  
-📧 Email: keshavagrawal273@gmail.com  
+📧 Email: keshavagr273@gmail.com  
 🌐 GitHub: [https://github.com/keshavagr273](https://github.com/keshavagr273)
 
 ⭐ If you like this project, don’t forget to star it on GitHub!
+
+---
+
+> © 2025 Keshav Agrawal — All rights reserved under the MIT License.  
+> If you use this project in your hackathon or work, please provide **proper credit**.
