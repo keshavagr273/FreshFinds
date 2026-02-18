@@ -29,6 +29,9 @@ const io = new Server(server, {
   }
 });
 
+// Trust proxy - Important for correct IP detection behind Render/Vercel proxies
+app.set('trust proxy', 1);
+
 // Security middleware
 app.use(helmet());
 app.use(compression());
@@ -41,13 +44,13 @@ const limiter = rateLimit({
 app.use('/api/', limiter);
 
 // CORS configuration
-const allowedOrigins = process.env.ALLOWED_ORIGINS 
+const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
-  : process.env.NODE_ENV === 'production' 
+  : process.env.NODE_ENV === 'production'
     ? [
-        'https://fresh-finds-beige.vercel.app',
-        'https://fresh-finds-qd38bra7n-keshav-agrawals-projects-a527a22b.vercel.app'
-      ]
+      'https://fresh-finds-beige.vercel.app',
+      'https://fresh-finds-qd38bra7n-keshav-agrawals-projects-a527a22b.vercel.app'
+    ]
     : ['http://localhost:5173', 'http://localhost:3000'];
 
 console.log('🌐 Allowed CORS Origins:', allowedOrigins);
@@ -71,21 +74,21 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/freshmart
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })
-.then(() => console.log('✅ Connected to MongoDB'))
-.catch(err => console.error('❌ MongoDB connection error:', err));
+  .then(() => console.log('✅ Connected to MongoDB'))
+  .catch(err => console.error('❌ MongoDB connection error:', err));
 
 // Socket.IO for real-time features
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
-  
+
   socket.on('join_merchant_room', (merchantId) => {
     socket.join(`merchant_${merchantId}`);
   });
-  
+
   socket.on('join_customer_room', (customerId) => {
     socket.join(`customer_${customerId}`);
   });
-  
+
   socket.on('disconnect', () => {
     console.log('User disconnected:', socket.id);
   });
@@ -107,8 +110,8 @@ app.use('/api/upload', uploadRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
-  res.status(200).json({ 
-    status: 'OK', 
+  res.status(200).json({
+    status: 'OK',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
     environment: process.env.NODE_ENV || 'development'
