@@ -126,7 +126,7 @@ const FreshnessAnalyzer = ({ onNavigate }) => {
                     <img
                       src={selectedImage}
                       alt="Selected produce"
-                      className="max-w-md mx-auto mb-4 rounded-lg shadow-md"
+                      className="w-full max-w-md mx-auto mb-4 rounded-lg shadow-md object-contain"
                     />
                     {isAnalyzing ? (
                       <div className="text-center">
@@ -134,7 +134,7 @@ const FreshnessAnalyzer = ({ onNavigate }) => {
                         <p className="text-purple-600 font-medium">Analyzing your produce...</p>
                       </div>
                     ) : (
-                      <div className="flex gap-4 justify-center">
+                      <div className="flex flex-col sm:flex-row gap-4 justify-center">
                         <button
                           onClick={analyzeImage}
                           className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors"
