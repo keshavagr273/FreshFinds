@@ -1,8 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { getUserAvatar } from '../utils/helpers';
 
 const Header = ({ onNavigate, currentView = 'shop', onSearch, onLogout, user, cartItems = [], isAuthenticated = false }) => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
   const role = (user && user.role) || localStorage.getItem('userRole');
   
   const cartItemCount = cartItems.reduce((total, item) => total + item.quantity, 0);
@@ -27,7 +40,7 @@ const Header = ({ onNavigate, currentView = 'shop', onSearch, onLogout, user, ca
               <img src="/F-removebg-preview.png" alt="FreshFinds Logo" className="w-8 h-8" />
               FreshFinds
             </button>
-            <nav className="hidden md:flex items-center gap-6">
+            <nav className="hidden min-[890px]:flex items-center gap-6">
               {role !== 'merchant' && (
                 <>
                   <button 
@@ -145,6 +158,13 @@ const Header = ({ onNavigate, currentView = 'shop', onSearch, onLogout, user, ca
                 )}
               </button>
             )}
+
+            <button 
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="min-[890px]:hidden text-2xl"
+            >
+              ☰
+            </button>
             
             {isAuthenticated ? (
               <div className="relative group">
@@ -207,6 +227,34 @@ const Header = ({ onNavigate, currentView = 'shop', onSearch, onLogout, user, ca
           </div>
         </div>
       </div>
+
+      {menuOpen && (
+  <div ref={menuRef} className="absolute right-16 top-16 min-[890px]:hidden w-48 bg-white rounded-md shadow-lg border border-slate-200 z-50">
+    <div className="py-2">
+
+      {role !== 'merchant' && (
+        <>
+          <button onClick={() => onNavigate('home')} className="block w-full text-left px-4 py-2 hover:bg-gray-100">Home</button>
+          <button onClick={() => onNavigate('shop')} className="block w-full text-left px-4 py-2 hover:bg-gray-100">Browse</button>
+          <button onClick={() => onNavigate('analyzer')} className="block w-full text-left px-4 py-2 hover:bg-gray-100">Fruitify</button>
+        </>
+      )}
+
+      {isAuthenticated && role === 'merchant' && (
+        <>
+          <button onClick={() => onNavigate('overview')} className="block w-full text-left px-4 py-2 hover:bg-gray-100">Dashboard</button>
+          <button onClick={() => onNavigate('merchant-my-products')} className="block w-full text-left px-4 py-2 hover:bg-gray-100">My Products</button>
+          <button onClick={() => onNavigate('merchant-add-product')} className="block w-full text-left px-4 py-2 hover:bg-gray-100">Add Product</button>
+        </>
+      )}
+
+      {isAuthenticated && (
+        <button onClick={() => onNavigate('account')} className="block w-full text-left px-4 py-2 hover:bg-gray-100">Account</button>
+      )}
+
+    </div>
+  </div>
+)}
     </header>
   );
 };

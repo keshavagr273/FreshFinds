@@ -103,6 +103,7 @@ const ShopDashboardOverview = ({ onNavigate }) => {
 
   const salesTrendOptions = {
     responsive: true,
+    maintainAspectRatio: false,
     interaction: {
       mode: 'index',
       intersect: false,
@@ -110,6 +111,13 @@ const ShopDashboardOverview = ({ onNavigate }) => {
     plugins: {
       legend: {
         position: 'top',
+        labels: {
+          padding: 10,
+          boxWidth: 10,
+          font: {
+            size: 10,
+          },
+        },
       },
       title: {
         display: false,
@@ -181,7 +189,11 @@ const ShopDashboardOverview = ({ onNavigate }) => {
         position: 'bottom',
         labels: {
           usePointStyle: true,
-          padding: 20,
+          padding: 10,
+          boxWidth: 10,
+          font: {
+            size: 10,
+          },
         }
       },
       tooltip: {
@@ -218,9 +230,17 @@ const ShopDashboardOverview = ({ onNavigate }) => {
 
   const weeklyComparisonOptions = {
     responsive: true,
+    maintainAspectRatio: false,
     plugins: {
       legend: {
         position: 'top',
+        labels: {
+          padding: 10,
+          boxWidth: 10,
+          font: {
+            size: 10,
+          },
+        },
       },
     },
     scales: {
@@ -372,7 +392,7 @@ const ShopDashboardOverview = ({ onNavigate }) => {
             {/* Charts Section */}
             <div className="mt-8 grid gap-6 lg:grid-cols-2">
               {/* Sales Trend Chart */}
-              <div className="rounded-2xl bg-white p-6 shadow-sm">
+              <div className="rounded-2xl bg-white p-6 shadow-sm min-w-0">
                 <div className="mb-6 flex items-center justify-between">
                   <h2 className="text-lg font-semibold text-slate-900">Sales Trend</h2>
                   <div className="flex items-center gap-2 text-sm text-slate-600">
@@ -380,13 +400,17 @@ const ShopDashboardOverview = ({ onNavigate }) => {
                     <span>+12% vs last week</span>
                   </div>
                 </div>
-                <div className="h-64">
-                  <Line data={salesTrendData} options={salesTrendOptions} />
+                <div className="h-56 sm:h-64 w-full max-w-full min-w-0 overflow-hidden">
+                  <Line
+                    data={salesTrendData}
+                    options={salesTrendOptions}
+                    style={{ width: '100%', maxWidth: '100%', height: '100%' }}
+                  />
                 </div>
               </div>
               
               {/* Category Performance Chart */}
-              <div className="rounded-2xl bg-white p-6 shadow-sm">
+              <div className="rounded-2xl bg-white p-6 shadow-sm min-w-0">
                 <div className="mb-6 flex items-center justify-between">
                   <h2 className="text-lg font-semibold text-slate-900">Category Performance</h2>
                   <div className="flex items-center gap-2 text-sm text-slate-600">
@@ -394,8 +418,12 @@ const ShopDashboardOverview = ({ onNavigate }) => {
                     <span>Revenue by category</span>
                   </div>
                 </div>
-                <div className="h-64">
-                  <Doughnut data={categoryPerformanceData} options={categoryPerformanceOptions} />
+                <div className="h-56 sm:h-64 w-full max-w-full min-w-0 overflow-hidden">
+                  <Doughnut
+                    data={categoryPerformanceData}
+                    options={categoryPerformanceOptions}
+                    style={{ width: '100%', maxWidth: '100%', height: '100%' }}
+                  />
                 </div>
               </div>
             </div>
@@ -411,17 +439,21 @@ const ShopDashboardOverview = ({ onNavigate }) => {
                     <span>This month vs last month</span>
                   </div>
                 </div>
-                <div className="h-64">
-                  <Bar data={weeklyComparisonData} options={weeklyComparisonOptions} />
+                <div className="h-56 sm:h-64 w-full max-w-full min-w-0 overflow-hidden">
+                  <Bar
+                    data={weeklyComparisonData}
+                    options={weeklyComparisonOptions}
+                    style={{ width: '100%', maxWidth: '100%', height: '100%' }}
+                  />
                 </div>
               </div>
 
               {/* Quick Stats */}
-              <div className="rounded-2xl bg-white p-6 shadow-sm">
+              <div className="rounded-2xl bg-white p-6 shadow-sm min-w-0">
                 <h2 className="mb-6 text-lg font-semibold text-slate-900">Quick Stats</h2>
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
                       <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
                         <span className="text-green-600 text-lg">🎯</span>
                       </div>
@@ -433,8 +465,8 @@ const ShopDashboardOverview = ({ onNavigate }) => {
                     <p className="text-xl font-bold text-green-600">23.5%</p>
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
                       <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
                         <span className="text-blue-600 text-lg">👥</span>
                       </div>
@@ -446,8 +478,8 @@ const ShopDashboardOverview = ({ onNavigate }) => {
                     <p className="text-xl font-bold text-blue-600">47</p>
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
                       <div className="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center">
                         <span className="text-purple-600 text-lg">🛒</span>
                       </div>
@@ -459,8 +491,8 @@ const ShopDashboardOverview = ({ onNavigate }) => {
                     <p className="text-xl font-bold text-purple-600">$79.15</p>
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
                       <div className="h-10 w-10 rounded-full bg-orange-100 flex items-center justify-center">
                         <span className="text-orange-600 text-lg">⭐</span>
                       </div>

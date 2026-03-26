@@ -94,28 +94,33 @@ const Cart = ({ onNavigate, cartItems: initialCartItems = [], onUpdateCart }) =>
                       className="bg-center bg-no-repeat aspect-square bg-cover rounded-xl size-20"
                       style={{ backgroundImage: `url("${item.image}")` }}
                     ></div>
-                    <div className="flex flex-1 flex-col justify-center">
+                    <div className="flex flex-1 flex-col justify-center min-w-0">
                       <p className="text-gray-900 text-base font-medium leading-normal">{item.name}</p>
                       <p className="text-gray-500 text-sm font-normal leading-normal">${item.price}</p>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                        className="flex items-center justify-center rounded-full size-8 bg-gray-100 hover:bg-gray-200"
-                      >
-                        <span className="text-gray-600 text-sm">−</span>
-                      </button>
-                      <span className="text-gray-900 text-sm font-medium px-3">{item.quantity}</span>
-                      <button
-                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                        className="flex items-center justify-center rounded-full size-8 bg-gray-100 hover:bg-gray-200"
-                      >
-                        <span className="text-gray-600 text-sm">+</span>
-                      </button>
+
+                    {/* Right side: stack quantity controls + total only on small screens */}
+                    <div className="flex flex-col items-end gap-2 sm:flex-row sm:items-center sm:gap-2">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                          className="flex items-center justify-center rounded-full size-7 sm:size-8 bg-gray-100 hover:bg-gray-200"
+                        >
+                          <span className="text-gray-600 text-xs sm:text-sm">−</span>
+                        </button>
+                        <span className="text-gray-900 text-sm font-medium px-3">{item.quantity}</span>
+                        <button
+                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                          className="flex items-center justify-center rounded-full size-7 sm:size-8 bg-gray-100 hover:bg-gray-200"
+                        >
+                          <span className="text-gray-600 text-xs sm:text-sm">+</span>
+                        </button>
+                      </div>
+
+                      <p className="text-gray-900 text-base font-medium leading-normal">
+                        ${(item.price * item.quantity).toFixed(2)}
+                      </p>
                     </div>
-                    <p className="text-gray-900 text-base font-medium leading-normal">
-                      ${(item.price * item.quantity).toFixed(2)}
-                    </p>
                   </div>
                 ))}
               </div>
