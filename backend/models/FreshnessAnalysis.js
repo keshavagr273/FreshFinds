@@ -3,8 +3,7 @@ const mongoose = require('mongoose');
 const freshnessAnalysisSchema = new mongoose.Schema({
   product: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Product',
-    required: true
+    ref: 'Product'
   },
   imageUrl: {
     type: String,
@@ -70,10 +69,10 @@ freshnessAnalysisSchema.index({ createdAt: -1 });
 freshnessAnalysisSchema.index({ 'analysisResults.freshnessScore': -1 });
 
 // Instance method to generate recommendations based on score
-freshnessAnalysisSchema.methods.generateRecommendations = function() {
+freshnessAnalysisSchema.methods.generateRecommendations = function () {
   const score = this.analysisResults.freshnessScore;
   const recommendations = [];
-  
+
   if (score >= 90) {
     recommendations.push('Excellent quality! Perfect for immediate consumption or storage.');
     recommendations.push('Store in optimal conditions to maintain freshness.');
@@ -94,7 +93,7 @@ freshnessAnalysisSchema.methods.generateRecommendations = function() {
     recommendations.push('Not suitable for consumption.');
     recommendations.push('May pose health risks if consumed.');
   }
-  
+
   this.analysisResults.recommendations = recommendations;
   return this;
 };

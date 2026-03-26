@@ -1,80 +1,77 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 
 const FreshnessAnalyzer = ({ onNavigate }) => {
   const [selectedImage, setSelectedImage] = useState(null);
+  const [selectedFile, setSelectedFile] = useState(null);
   const [analysisResult, setAnalysisResult] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
-  // Random result data for demonstration
-  const getRandomResult = () => {
-    const results = [
-      {
-        freshness: Math.floor(Math.random() * 40) + 60, // 60-100%
-        status: 'Fresh',
-        recommendations: [
-          'Store in refrigerator to maintain freshness',
-          'Consume within 3-5 days',
-          'Check for any soft spots before consuming'
-        ]
-      },
-      {
-        freshness: Math.floor(Math.random() * 30) + 40, // 40-70%
-        status: 'Moderately Fresh',
-        recommendations: [
-          'Use within 1-2 days for best quality',
-          'Store in cool, dry place',
-          'Consider cooking to extend shelf life'
-        ]
-      },
-      {
-        freshness: Math.floor(Math.random() * 20) + 20, // 20-40%
-        status: 'Stale',
-        recommendations: [
-          'Use immediately or discard',
-          'Check for mold or discoloration',
-          'Consider composting if too old'
-        ]
-      },
-      {
-        freshness: Math.floor(Math.random() * 15) + 5, // 5-20%
-        status: 'Spoiled',
-        recommendations: [
-          'Do not consume',
-          'Discard immediately',
-          'Check other produce for contamination'
-        ]
+  const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
+
+  const formatStatus = (status) => {
+    if (!status) return 'Unknown';
+    return status
+      .split('_')
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(' ');
+  };
+
+  const analyzeFile = async (file) => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setErrorMessage('Please login first to use freshness analysis.');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('image', file);
+
+    setIsAnalyzing(true);
+    setErrorMessage('');
+
+    try {
+      const response = await axios.post(`${baseURL}/freshness/analyze`, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      const results = response.data?.data?.analysisResults;
+      if (!results) {
+        throw new Error('Freshness API returned an unexpected response.');
       }
-    ];
-    
-    return results[Math.floor(Math.random() * results.length)];
+
+      setAnalysisResult({
+        freshness: results.freshnessScore,
+        status: formatStatus(results.status),
+        recommendations: Array.isArray(results.recommendations) ? results.recommendations : []
+      });
+    } catch (error) {
+      const message = error.response?.data?.message || error.message || 'Failed to analyze image';
+      setErrorMessage(message);
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   const handleImageUpload = (event) => {
     const file = event.target.files[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setSelectedImage(e.target.result);
-        // Automatically show random result when image is uploaded
-        setIsAnalyzing(true);
-        setTimeout(() => {
-          setAnalysisResult(getRandomResult());
-          setIsAnalyzing(false);
-        }, 1500);
-      };
-      reader.readAsDataURL(file);
+      const previewUrl = URL.createObjectURL(file);
+
+      setSelectedFile(file);
+      setSelectedImage(previewUrl);
+      setAnalysisResult(null);
+      analyzeFile(file);
     }
   };
 
   const analyzeImage = async () => {
-    if (!selectedImage) return;
-    
-    setIsAnalyzing(true);
-    // Simulate API call with random result
-    setTimeout(() => {
-      setAnalysisResult(getRandomResult());
-      setIsAnalyzing(false);
-    }, 2000);
+    if (!selectedFile) return;
+    await analyzeFile(selectedFile);
   };
 
   return (
@@ -99,7 +96,7 @@ const FreshnessAnalyzer = ({ onNavigate }) => {
                 {!selectedImage ? (
                   <div>
                     <span className="text-6xl text-purple-400 mb-4 block">
-                      ☁️📤
+                      Upload
                     </span>
                     <h3 className="text-xl font-semibold text-gray-700 mb-2">
                       Upload Produce Image
@@ -144,7 +141,9 @@ const FreshnessAnalyzer = ({ onNavigate }) => {
                         <button
                           onClick={() => {
                             setSelectedImage(null);
+                            setSelectedFile(null);
                             setAnalysisResult(null);
+                            setErrorMessage('');
                           }}
                           className="bg-gray-500 text-white px-6 py-3 rounded-lg font-medium hover:bg-gray-600 transition-colors"
                         >
@@ -155,49 +154,48 @@ const FreshnessAnalyzer = ({ onNavigate }) => {
                   </div>
                 )}
               </div>
+              {errorMessage && (
+                <p className="mt-4 text-red-600 font-medium text-center">{errorMessage}</p>
+              )}
             </div>
 
             {/* Results Section */}
             {analysisResult && (
               <div className="bg-white rounded-2xl shadow-lg p-8">
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">Analysis Results</h2>
-                
+
                 <div className="grid md:grid-cols-2 gap-8">
                   <div>
-                    <div className={`rounded-xl p-6 ${
-                      analysisResult.freshness >= 70 ? 'bg-gradient-to-r from-green-50 to-emerald-50' :
+                    <div className={`rounded-xl p-6 ${analysisResult.freshness >= 70 ? 'bg-gradient-to-r from-green-50 to-emerald-50' :
                       analysisResult.freshness >= 40 ? 'bg-gradient-to-r from-yellow-50 to-orange-50' :
-                      analysisResult.freshness >= 20 ? 'bg-gradient-to-r from-orange-50 to-red-50' :
-                      'bg-gradient-to-r from-red-50 to-red-100'
-                    }`}>
+                        analysisResult.freshness >= 20 ? 'bg-gradient-to-r from-orange-50 to-red-50' :
+                          'bg-gradient-to-r from-red-50 to-red-100'
+                      }`}>
                       <div className="flex items-center justify-between mb-4">
                         <h3 className="text-lg font-semibold text-gray-800">Freshness Score</h3>
-                        <span className={`text-2xl font-bold ${
-                          analysisResult.freshness >= 70 ? 'text-emerald-600' :
+                        <span className={`text-2xl font-bold ${analysisResult.freshness >= 70 ? 'text-emerald-600' :
                           analysisResult.freshness >= 40 ? 'text-yellow-600' :
-                          analysisResult.freshness >= 20 ? 'text-orange-600' :
-                          'text-red-600'
-                        }`}>
+                            analysisResult.freshness >= 20 ? 'text-orange-600' :
+                              'text-red-600'
+                          }`}>
                           {analysisResult.freshness}%
                         </span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-3">
                         <div
-                          className={`h-3 rounded-full transition-all duration-500 ${
-                            analysisResult.freshness >= 70 ? 'bg-emerald-500' :
+                          className={`h-3 rounded-full transition-all duration-500 ${analysisResult.freshness >= 70 ? 'bg-emerald-500' :
                             analysisResult.freshness >= 40 ? 'bg-yellow-500' :
-                            analysisResult.freshness >= 20 ? 'bg-orange-500' :
-                            'bg-red-500'
-                          }`}
+                              analysisResult.freshness >= 20 ? 'bg-orange-500' :
+                                'bg-red-500'
+                            }`}
                           style={{ width: `${analysisResult.freshness}%` }}
                         ></div>
                       </div>
-                      <p className={`font-medium mt-2 ${
-                        analysisResult.freshness >= 70 ? 'text-emerald-700' :
+                      <p className={`font-medium mt-2 ${analysisResult.freshness >= 70 ? 'text-emerald-700' :
                         analysisResult.freshness >= 40 ? 'text-yellow-700' :
-                        analysisResult.freshness >= 20 ? 'text-orange-700' :
-                        'text-red-700'
-                      }`}>
+                          analysisResult.freshness >= 20 ? 'text-orange-700' :
+                            'text-red-700'
+                        }`}>
                         Status: {analysisResult.status}
                       </p>
                     </div>
