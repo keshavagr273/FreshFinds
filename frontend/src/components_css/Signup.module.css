@@ -60,6 +60,11 @@
   border-color: #7c3aed;
 }
 
+.toggleButtonActive:hover {
+  background: #6d28d9;
+  color: white;
+}
+
 .form {
   display: flex;
   flex-direction: column;
