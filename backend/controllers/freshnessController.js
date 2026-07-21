@@ -378,6 +378,12 @@ exports.getProductFreshnessHistory = async (req, res) => {
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
+    // Verify the requesting user owns the product before returning history
+    const product = await Product.findOne({ _id: productId, merchant: req.user._id });
+    if (!product && req.user.role !== 'admin') {
+      return res.status(403).json({ success: false, message: 'Access denied' });
+    }
+
     const analyses = await FreshnessAnalysis.find({ product: productId })
       .populate('analyst', 'username')
       .sort({ createdAt: -1 })

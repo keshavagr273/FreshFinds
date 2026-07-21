@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 
 const FreshnessAnalyzer = ({ onNavigate }) => {
@@ -7,6 +7,13 @@ const FreshnessAnalyzer = ({ onNavigate }) => {
   const [analysisResult, setAnalysisResult] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const objectUrlRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
+    };
+  }, []);
 
   const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
 
@@ -61,6 +68,12 @@ const FreshnessAnalyzer = ({ onNavigate }) => {
     const file = event.target.files[0];
     if (file) {
       const previewUrl = URL.createObjectURL(file);
+
+      // Clean up old URL first
+      if (objectUrlRef.current) {
+        URL.revokeObjectURL(objectUrlRef.current);
+      }
+      objectUrlRef.current = previewUrl;
 
       setSelectedFile(file);
       setSelectedImage(previewUrl);

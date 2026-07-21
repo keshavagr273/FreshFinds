@@ -58,7 +58,7 @@ const uploadProfileImage = async (req, res) => {
     const userId = req.user.id;
     const user = await User.findByIdAndUpdate(
       userId,
-      { avatar: result.secure_url },
+      { avatar: result.secure_url, avatarPublicId: result.public_id },
       { new: true, select: '-password' }
     );
 
@@ -83,7 +83,7 @@ const uploadProfileImage = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error uploading image',
-      error: error.message
+      ...(process.env.NODE_ENV === 'development' && { error: error.message })
     });
   }
 };
@@ -93,10 +93,22 @@ const deleteProfileImage = async (req, res) => {
   try {
     const userId = req.user.id;
     
+    const userObj = await User.findById(userId);
+    if (!userObj) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    if (userObj.avatarPublicId) {
+      await cloudinary.uploader.destroy(userObj.avatarPublicId);
+    }
+
     // Update user's avatar to empty string
     const user = await User.findByIdAndUpdate(
       userId,
-      { avatar: '' },
+      { avatar: '', avatarPublicId: '' },
       { new: true, select: '-password' }
     );
 
@@ -120,7 +132,7 @@ const deleteProfileImage = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error removing profile image',
-      error: error.message
+      ...(process.env.NODE_ENV === 'development' && { error: error.message })
     });
   }
 };

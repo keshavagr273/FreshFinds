@@ -69,36 +69,6 @@ exports.updateProfile = async (req, res) => {
   }
 };
 
-// Upload avatar
-exports.uploadAvatar = async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({
-        success: false,
-        message: 'No image file provided'
-      });
-    }
-
-    const user = await User.findByIdAndUpdate(
-      req.user._id,
-      { avatar: req.file.path },
-      { new: true }
-    );
-
-    res.json({
-      success: true,
-      message: 'Avatar uploaded successfully',
-      data: { avatar: user.avatar }
-    });
-
-  } catch (error) {
-    console.error('Upload avatar error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Server error'
-    });
-  }
-};
 
 // Change password
 exports.changePassword = async (req, res) => {

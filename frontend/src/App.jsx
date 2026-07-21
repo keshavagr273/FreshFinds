@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import './App.css'
+import axios from 'axios'
 import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 
@@ -51,6 +52,26 @@ function App() {
     }
   }, [])
 
+  const fetchCartItems = useCallback(async () => {
+    if (!isAuthenticated || role === 'merchant') return
+    try {
+      const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api'
+      const token = localStorage.getItem('token')
+      const res = await axios.get(`${baseURL}/cart`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      if (res.data && res.data.data) {
+        setCartItems(res.data.data.items || [])
+      }
+    } catch (error) {
+      console.error('Failed to fetch cart', error)
+    }
+  }, [isAuthenticated, role])
+
+  useEffect(() => {
+    fetchCartItems()
+  }, [fetchCartItems])
+
   const handleSearch = (query) => {
     setSearchQuery(query)
   }
@@ -63,6 +84,7 @@ function App() {
       setCurrentView('overview')
     } else {
       setCurrentView('home')
+      fetchCartItems()
     }
   }
 
@@ -85,29 +107,23 @@ function App() {
     setCartItems(newCartItems)
   }
 
-  const addToCart = (product) => {
-    const existingItem = cartItems.find(item => item.id === product.id)
-    
-    if (existingItem) {
-      const updatedItems = cartItems.map(item =>
-        item.id === product.id 
-          ? { ...item, quantity: item.quantity + 1 }
-          : item
-      )
-      setCartItems(updatedItems)
-    } else {
-      const newItem = {
-        id: product.id,
-        name: product.name,
-        price: product.price,
+  const addToCart = async (product) => {
+    try {
+      const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api'
+      const token = localStorage.getItem('token')
+      await axios.post(`${baseURL}/cart/add`, {
+        productId: product._id || product.id,
         quantity: 1,
-        image: product.image || '/images/default-product.jpg'
-      }
-      setCartItems([...cartItems, newItem])
+        price: product.price
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      
+      toast.success(`${product.name} added to cart!`)
+      fetchCartItems()
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to add to cart')
     }
-    
-    // Show success message
-    toast.success(`${product.name} added to cart!`)
   }
 
   const handleNavigation = (targetView) => {
@@ -159,7 +175,7 @@ function App() {
       case 'account':
         return isAuthenticated ? <Account onNavigate={handleNavigation} user={user} onUpdateUser={handleUpdateUser} /> : <CustomerLogIn onSwitch={() => setCurrentView('signup')} onNavigate={handleNavigation} onSuccess={handleLogin} />
       case 'cart':
-        return isAuthenticated ? <Cart onNavigate={handleNavigation} cartItems={cartItems} onUpdateCart={handleUpdateCart} /> : <CustomerLogIn onSwitch={() => setCurrentView('signup')} onNavigate={handleNavigation} onSuccess={handleLogin} />
+        return isAuthenticated ? <Cart onNavigate={handleNavigation} cartItems={cartItems} onUpdateCart={fetchCartItems} /> : <CustomerLogIn onSwitch={() => setCurrentView('signup')} onNavigate={handleNavigation} onSuccess={handleLogin} />
       case 'analyzer':
         return isAuthenticated ? <FreshnessAnalyzer onNavigate={handleNavigation} /> : <CustomerLogIn onSwitch={() => setCurrentView('signup')} onNavigate={handleNavigation} onSuccess={handleLogin} />
       case 'shop':
@@ -177,27 +193,23 @@ function App() {
     }
   }
 
-  const showHeader = true // Show header on all pages
-
   return (
     <div className="App">
-      {showHeader && (
-        <Header 
-          onNavigate={handleNavigation} 
-          currentView={currentView} 
-          onSearch={handleSearch}
-          onLogout={handleLogout}
-          user={user}
-          cartItems={cartItems}
-          isAuthenticated={isAuthenticated}
-        />
-      )}
-      <div className={showHeader ? 'pt-0' : ''}>
+      <Header 
+        onNavigate={handleNavigation} 
+        currentView={currentView} 
+        onSearch={handleSearch}
+        onLogout={handleLogout}
+        user={user}
+        cartItems={cartItems}
+        isAuthenticated={isAuthenticated}
+      />
+      <div className="pt-0">
         {renderView()}
       </div>
       
       {/* Mobile Fruitify FAB - Only show on non-analyzer pages */}
-      {showHeader && currentView !== 'analyzer' && (
+      {currentView !== 'analyzer' && (
         <button
           onClick={() => setCurrentView('analyzer')}
           className="fixed bottom-6 right-6 md:hidden bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-4 rounded-full shadow-2xl hover:shadow-3xl transition-all transform hover:scale-110 z-50 animate-pulse"

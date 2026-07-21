@@ -66,11 +66,7 @@ exports.searchProducts = async (req, res) => {
     
     // Text search
     if (q) {
-      query.$or = [
-        { name: { $regex: q, $options: 'i' } },
-        { description: { $regex: q, $options: 'i' } },
-        { tags: { $in: [new RegExp(q, 'i')] } }
-      ];
+      query.$text = { $search: q };
     }
     
     // Category filter
@@ -254,7 +250,19 @@ exports.updateProduct = async (req, res) => {
       });
     }
 
-    Object.assign(product, req.body);
+    const allowedUpdates = [
+      'name', 'description', 'price', 'category', 'subcategory',
+      'stock', 'nutrition', 'ingredients', 'allergens', 'tags',
+      'searchKeywords', 'featured', 'organic', 'locallySourced',
+      'weight', 'dimensions', 'freshness'
+    ];
+
+    allowedUpdates.forEach(field => {
+      if (req.body[field] !== undefined) {
+        product[field] = req.body[field];
+      }
+    });
+
     await product.save();
 
     await product.populate('merchant', 'username storeName');
@@ -340,9 +348,20 @@ exports.rateProduct = async (req, res) => {
       });
     }
 
-    // Simple rating update (in production, you'd want to track individual ratings)
-    const newCount = product.rating.count + 1;
-    const newAverage = ((product.rating.average * product.rating.count) + rating) / newCount;
+    const existingRating = product.userRatings.find(r => r.user.toString() === req.user._id.toString());
+    if (existingRating) {
+      return res.status(400).json({
+        success: false,
+        message: 'You have already rated this product.'
+      });
+    }
+
+    product.userRatings.push({ user: req.user._id, rating });
+
+    // Recalculate average from all stored ratings
+    const newCount = product.userRatings.length;
+    const sumRatings = product.userRatings.reduce((sum, r) => sum + r.rating, 0);
+    const newAverage = sumRatings / newCount;
 
     product.rating = {
       average: Math.round(newAverage * 10) / 10,

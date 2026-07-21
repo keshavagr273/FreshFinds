@@ -82,7 +82,14 @@ const userSchema = new mongoose.Schema({
     },
     dietary: [String], // vegetarian, vegan, gluten-free, etc.
     categories: [String] // preferred product categories
-  }
+  },
+  tokenVersion: {
+    type: Number,
+    default: 0
+  },
+  passwordResetToken: String,
+  passwordResetExpires: Date,
+  avatarPublicId: String
 }, {
   timestamps: true
 });

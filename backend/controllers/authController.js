@@ -1,10 +1,12 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const { validationResult } = require('express-validator');
+const crypto = require('crypto');
+const sendEmail = require('../utils/email');
 
 // Generate JWT token
-const generateToken = (userId) => {
-  return jwt.sign({ userId }, process.env.JWT_SECRET, {
+const generateToken = (userId, tokenVersion) => {
+  return jwt.sign({ userId, tokenVersion }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRE || '7d'
   });
 };
@@ -45,16 +47,24 @@ exports.customerSignup = async (req, res) => {
     await customer.save();
 
     // Generate token
-    const token = generateToken(customer._id);
+    const token = generateToken(customer._id, customer.tokenVersion);
 
     // Update last login
     customer.lastLogin = new Date();
     await customer.save();
 
+    const safeUser = {
+      _id: customer._id,
+      username: customer.username,
+      email: customer.email,
+      role: customer.role,
+      avatar: customer.avatar
+    };
+
     res.status(201).json({
       success: true,
       message: 'Customer registered successfully',
-      user: customer,
+      user: safeUser,
       token
     });
 
@@ -104,16 +114,24 @@ exports.merchantSignup = async (req, res) => {
     await merchant.save();
 
     // Generate token
-    const token = generateToken(merchant._id);
+    const token = generateToken(merchant._id, merchant.tokenVersion);
 
     // Update last login
     merchant.lastLogin = new Date();
     await merchant.save();
 
+    const safeUser = {
+      _id: merchant._id,
+      username: merchant.username,
+      email: merchant.email,
+      role: merchant.role,
+      avatar: merchant.avatar
+    };
+
     res.status(201).json({
       success: true,
       message: 'Merchant registered successfully',
-      user: merchant,
+      user: safeUser,
       token
     });
 
@@ -171,16 +189,24 @@ exports.customerLogin = async (req, res) => {
     }
 
     // Generate token
-    const token = generateToken(user._id);
+    const token = generateToken(user._id, user.tokenVersion);
 
     // Update last login
     user.lastLogin = new Date();
     await user.save();
 
+    const safeUser = {
+      _id: user._id,
+      username: user.username,
+      email: user.email,
+      role: user.role,
+      avatar: user.avatar
+    };
+
     res.json({
       success: true,
       message: 'Login successful',
-      user,
+      user: safeUser,
       token
     });
 
@@ -238,16 +264,24 @@ exports.merchantLogin = async (req, res) => {
     }
 
     // Generate token
-    const token = generateToken(user._id);
+    const token = generateToken(user._id, user.tokenVersion);
 
     // Update last login
     user.lastLogin = new Date();
     await user.save();
 
+    const safeUser = {
+      _id: user._id,
+      username: user.username,
+      email: user.email,
+      role: user.role,
+      avatar: user.avatar
+    };
+
     res.json({
       success: true,
       message: 'Login successful',
-      user,
+      user: safeUser,
       token
     });
 
@@ -263,8 +297,11 @@ exports.merchantLogin = async (req, res) => {
 // Logout
 exports.logout = async (req, res) => {
   try {
-    // In a real application, you might want to maintain a blacklist of tokens
-    // For now, we'll just send a success response
+    // Invalidate all tokens for this user by incrementing tokenVersion
+    if (req.user) {
+      await User.findByIdAndUpdate(req.user._id, { $inc: { tokenVersion: 1 } });
+    }
+    
     res.json({
       success: true,
       message: 'Logged out successfully'
@@ -300,7 +337,7 @@ exports.refreshToken = async (req, res) => {
       });
     }
 
-    const newToken = generateToken(user._id);
+    const newToken = generateToken(user._id, user.tokenVersion);
 
     res.json({
       success: true,
@@ -324,18 +361,46 @@ exports.forgotPassword = async (req, res) => {
     
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'User not found'
+      // Do not leak that the user does not exist
+      return res.json({
+        success: true,
+        message: 'If an account with that email exists, a password reset link has been sent.'
       });
     }
 
-    // In a real application, you would send an email with a reset link
-    // For now, we'll just return a success message
-    res.json({
-      success: true,
-      message: 'Password reset link sent to your email'
-    });
+    // Generate reset token
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetTokenHash = crypto.createHash('sha256').update(resetToken).digest('hex');
+    
+    user.passwordResetToken = resetTokenHash;
+    user.passwordResetExpires = Date.now() + 10 * 60 * 1000; // 10 mins
+    await user.save({ validateBeforeSave: false });
+
+    // Send email
+    const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password/${resetToken}`;
+    const message = `You are receiving this email because you (or someone else) has requested the reset of a password. Please make a put request to: \n\n ${resetUrl}`;
+    
+    try {
+      await sendEmail({
+        email: user.email,
+        subject: 'Password reset token',
+        message
+      });
+
+      res.json({
+        success: true,
+        message: 'If an account with that email exists, a password reset link has been sent.'
+      });
+    } catch (err) {
+      user.passwordResetToken = undefined;
+      user.passwordResetExpires = undefined;
+      await user.save({ validateBeforeSave: false });
+      
+      return res.status(500).json({
+        success: false,
+        message: 'Email could not be sent'
+      });
+    }
 
   } catch (error) {
     console.error('Forgot password error:', error);
@@ -351,8 +416,28 @@ exports.resetPassword = async (req, res) => {
   try {
     const { token, password } = req.body;
     
-    // In a real application, you would verify the reset token
-    // For now, we'll just return a success message
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+    const user = await User.findOne({
+      passwordResetToken: hashedToken,
+      passwordResetExpires: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Token invalid or expired' 
+      });
+    }
+
+    user.password = password;
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
+    
+    // Invalidate existing sessions
+    user.tokenVersion += 1;
+    
+    await user.save();
+
     res.json({
       success: true,
       message: 'Password reset successfully'
@@ -372,11 +457,9 @@ exports.verifyEmail = async (req, res) => {
   try {
     const { token } = req.params;
     
-    // In a real application, you would verify the email token
-    // For now, we'll just return a success message
-    res.json({
-      success: true,
-      message: 'Email verified successfully'
+    return res.status(501).json({
+      success: false,
+      message: 'Email verification is not yet implemented'
     });
 
   } catch (error) {

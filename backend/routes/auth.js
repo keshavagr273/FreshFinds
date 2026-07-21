@@ -2,8 +2,16 @@ const express = require('express');
 const { body } = require('express-validator');
 const authController = require('../controllers/authController');
 const { validate } = require('../middleware/validation');
+const rateLimit = require('express-rate-limit');
 
 const router = express.Router();
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { success: false, message: 'Too many login attempts. Try again in 15 minutes.' },
+  skipSuccessfulRequests: true,
+});
 
 // Validation rules
 const signupValidation = [
@@ -21,11 +29,11 @@ const loginValidation = [
 // Routes
 router.post('/customer-signup', signupValidation, validate, authController.customerSignup);
 router.post('/merchant-signup', signupValidation, validate, authController.merchantSignup);
-router.post('/customer-login', loginValidation, validate, authController.customerLogin);
-router.post('/merchant-login', loginValidation, validate, authController.merchantLogin);
+router.post('/customer-login', authLimiter, loginValidation, validate, authController.customerLogin);
+router.post('/merchant-login', authLimiter, loginValidation, validate, authController.merchantLogin);
 router.post('/logout', authController.logout);
 router.post('/refresh-token', authController.refreshToken);
-router.post('/forgot-password', authController.forgotPassword);
+router.post('/forgot-password', authLimiter, authController.forgotPassword);
 router.post('/reset-password', authController.resetPassword);
 router.get('/verify-email/:token', authController.verifyEmail);
 

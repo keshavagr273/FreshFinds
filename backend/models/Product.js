@@ -101,6 +101,10 @@ const productSchema = new mongoose.Schema({
       default: 0
     }
   },
+  userRatings: [{
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    rating: Number
+  }],
   views: {
     type: Number,
     default: 0

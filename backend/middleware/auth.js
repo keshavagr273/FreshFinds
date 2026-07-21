@@ -23,6 +23,13 @@ exports.auth = async (req, res, next) => {
       });
     }
 
+    if (decoded.tokenVersion !== user.tokenVersion) {
+      return res.status(401).json({
+        success: false,
+        message: 'Session expired. Please log in again.'
+      });
+    }
+
     if (!user.isActive) {
       return res.status(401).json({
         success: false,
@@ -44,6 +51,12 @@ exports.auth = async (req, res, next) => {
 // Merchant-only middleware
 exports.merchantAuth = async (req, res, next) => {
   try {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: 'Authentication required'
+      });
+    }
     if (req.user.role !== 'merchant') {
       return res.status(403).json({
         success: false,
@@ -63,6 +76,12 @@ exports.merchantAuth = async (req, res, next) => {
 // Admin-only middleware
 exports.adminAuth = async (req, res, next) => {
   try {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: 'Authentication required'
+      });
+    }
     if (req.user.role !== 'admin') {
       return res.status(403).json({
         success: false,
