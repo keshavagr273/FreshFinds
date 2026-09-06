@@ -10,16 +10,152 @@ const modelConfig = {
   hfToken: process.env.HUGGINGFACE_TOKEN || ''
 };
 
+const checkSpaceStatus = async (wake = true) => {
+  try {
+    const spaceId = modelConfig.spaceId;
+    const apiUrl = `https://huggingface.co/api/spaces/${spaceId}`;
+    const headers = modelConfig.hfToken ? { Authorization: `Bearer ${modelConfig.hfToken}` } : {};
+
+    const res = await fetch(apiUrl, {
+      headers,
+      signal: AbortSignal.timeout(6000)
+    });
+
+    if (!res.ok) {
+      return {
+        stage: 'UNKNOWN',
+        isReady: false,
+        isSleeping: false,
+        isWaking: false,
+        estimatedSeconds: 0,
+        message: `Hugging Face API returned HTTP ${res.status}`
+      };
+    }
+
+    const data = await res.json();
+    const stage = data?.runtime?.stage || 'UNKNOWN';
+    const subdomain = data?.subdomain || spaceId.replace('/', '-').toLowerCase();
+    const host = data?.host || `https://${subdomain}.hf.space`;
+
+    if (stage === 'RUNNING') {
+      return {
+        stage: 'RUNNING',
+        isReady: true,
+        isSleeping: false,
+        isWaking: false,
+        estimatedSeconds: 0,
+        host,
+        message: 'AI Freshness Engine is online and ready.'
+      };
+    }
+
+    if (stage === 'SLEEPING') {
+      // Trigger wake-up if requested
+      if (wake) {
+        fetch(`${host}/gradio_api/info`, {
+          headers,
+          signal: AbortSignal.timeout(4000)
+        }).catch(() => {});
+      }
+
+      return {
+        stage: 'SLEEPING',
+        isReady: false,
+        isSleeping: true,
+        isWaking: true,
+        estimatedSeconds: 40,
+        host,
+        message: 'AI model is in power-saver sleep mode due to inactivity. Waking up now (~30-45s)...'
+      };
+    }
+
+    if (stage === 'APP_STARTING' || stage === 'BUILDING') {
+      return {
+        stage,
+        isReady: false,
+        isSleeping: false,
+        isWaking: true,
+        estimatedSeconds: 25,
+        host,
+        message: 'AI model is currently booting up (~20-30s)...'
+      };
+    }
+
+    return {
+      stage,
+      isReady: false,
+      isSleeping: false,
+      isWaking: false,
+      estimatedSeconds: 0,
+      host,
+      message: `AI model status is ${stage}.`
+    };
+  } catch (err) {
+    return {
+      stage: 'UNKNOWN',
+      isReady: false,
+      isSleeping: false,
+      isWaking: false,
+      estimatedSeconds: 0,
+      message: err.message || 'Unable to check space status'
+    };
+  }
+};
+
+exports.getFreshnessServiceStatus = async (req, res) => {
+  try {
+    const wake = req.query.wake !== 'false';
+    const status = await checkSpaceStatus(wake);
+    return res.json({
+      success: true,
+      data: status
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to query AI service status',
+      error: error.message
+    });
+  }
+};
+
 const getGradioClient = async () => {
   if (gradioClientInstance) {
     return gradioClientInstance;
   }
 
-  const { Client, handle_file } = await import('@gradio/client');
-  const options = modelConfig.hfToken ? { hf_token: modelConfig.hfToken } : undefined;
-  gradioClientInstance = await Client.connect(modelConfig.spaceId, options);
-  gradioHandleFile = handle_file;
-  return gradioClientInstance;
+  // Pre-check space stage so we can give instant feedback if sleeping
+  const spaceStatus = await checkSpaceStatus(true);
+  if (spaceStatus.isSleeping || spaceStatus.isWaking) {
+    const error = new Error(spaceStatus.message);
+    error.isSleeping = spaceStatus.isSleeping;
+    error.isWaking = spaceStatus.isWaking;
+    error.stage = spaceStatus.stage;
+    error.estimatedSeconds = spaceStatus.estimatedSeconds;
+    throw error;
+  }
+
+  try {
+    const { Client, handle_file } = await import('@gradio/client');
+    const options = modelConfig.hfToken ? { hf_token: modelConfig.hfToken } : undefined;
+    gradioClientInstance = await Client.connect(modelConfig.spaceId, options);
+    gradioHandleFile = handle_file;
+    return gradioClientInstance;
+  } catch (err) {
+    gradioClientInstance = null;
+    gradioHandleFile = null;
+    // Check if failure was caused by space sleeping
+    const postStatus = await checkSpaceStatus(true);
+    if (postStatus.isSleeping || postStatus.isWaking) {
+      const sleepErr = new Error(postStatus.message);
+      sleepErr.isSleeping = postStatus.isSleeping;
+      sleepErr.isWaking = postStatus.isWaking;
+      sleepErr.stage = postStatus.stage;
+      sleepErr.estimatedSeconds = postStatus.estimatedSeconds;
+      throw sleepErr;
+    }
+    throw err;
+  }
 };
 
 const clampScore = (value) => {
@@ -264,6 +400,17 @@ exports.analyzeImage = async (req, res) => {
 
   } catch (error) {
     console.error('Analyze image error:', error);
+    if (error.isSleeping || error.isWaking) {
+      return res.status(503).json({
+        success: false,
+        isSleeping: error.isSleeping || false,
+        isWaking: error.isWaking || true,
+        stage: error.stage || 'APP_STARTING',
+        estimatedSeconds: error.estimatedSeconds || 35,
+        message: error.message || 'The AI freshness engine is waking up from eco-sleep mode (~30-45s). Please retry in a moment.'
+      });
+    }
+
     res.status(500).json({
       success: false,
       message: 'Server error during analysis'
@@ -335,6 +482,17 @@ exports.analyzeProductImage = async (req, res) => {
 
   } catch (error) {
     console.error('Analyze product image error:', error);
+    if (error.isSleeping || error.isWaking) {
+      return res.status(503).json({
+        success: false,
+        isSleeping: error.isSleeping || false,
+        isWaking: error.isWaking || true,
+        stage: error.stage || 'APP_STARTING',
+        estimatedSeconds: error.estimatedSeconds || 35,
+        message: error.message || 'The AI freshness engine is waking up from eco-sleep mode (~30-45s). Please retry in a moment.'
+      });
+    }
+
     res.status(500).json({
       success: false,
       message: 'Server error during analysis'

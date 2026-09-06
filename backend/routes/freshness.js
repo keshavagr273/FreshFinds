@@ -6,6 +6,7 @@ const upload = require('../middleware/upload');
 const router = express.Router();
 
 // Public routes
+router.get('/status', freshnessController.getFreshnessServiceStatus);
 router.get('/history/:productId', freshnessController.getProductFreshnessHistory);
 
 // Protected routes

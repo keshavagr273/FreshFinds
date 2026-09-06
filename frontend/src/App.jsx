@@ -52,6 +52,14 @@ function App() {
     }
   }, [])
 
+  // Pre-warm AI freshness service in the background on initial website visit
+  useEffect(() => {
+    const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
+    axios.get(`${baseURL}/freshness/status?wake=true`).catch(() => {
+      // Background pre-warming probe; ignore silent network failures
+    });
+  }, []);
+
   const fetchCartItems = useCallback(async () => {
     if (!isAuthenticated || role === 'merchant') return
     try {
