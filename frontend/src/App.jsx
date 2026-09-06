@@ -60,11 +60,36 @@ function App() {
     });
   }, []);
 
+  // Global Axios interceptor to handle expired or invalid tokens automatically
+  useEffect(() => {
+    const interceptor = axios.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response?.status === 401) {
+          const hadToken = Boolean(localStorage.getItem('token'));
+          if (hadToken) {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            localStorage.removeItem('userRole');
+            setUser(null);
+            setIsAuthenticated(false);
+            setCartItems([]);
+          }
+        }
+        return Promise.reject(error);
+      }
+    );
+
+    return () => {
+      axios.interceptors.response.eject(interceptor);
+    };
+  }, []);
+
   const fetchCartItems = useCallback(async () => {
-    if (!isAuthenticated || role === 'merchant') return
+    const token = localStorage.getItem('token')
+    if (!token || !isAuthenticated || role === 'merchant') return
     try {
       const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api'
-      const token = localStorage.getItem('token')
       const res = await axios.get(`${baseURL}/cart`, {
         headers: { Authorization: `Bearer ${token}` }
       })
@@ -72,7 +97,16 @@ function App() {
         setCartItems(res.data.data.items || [])
       }
     } catch (error) {
-      console.error('Failed to fetch cart', error)
+      if (error.response?.status === 401) {
+        localStorage.removeItem('token')
+        localStorage.removeItem('user')
+        localStorage.removeItem('userRole')
+        setUser(null)
+        setIsAuthenticated(false)
+        setCartItems([])
+      } else {
+        console.error('Failed to fetch cart', error)
+      }
     }
   }, [isAuthenticated, role])
 

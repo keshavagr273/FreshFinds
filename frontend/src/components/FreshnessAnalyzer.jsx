@@ -98,12 +98,6 @@ const FreshnessAnalyzer = ({ onNavigate }) => {
   }, [modelStatus.isReady, queuedFile, checkModelStatus]);
 
   const analyzeFile = async (file) => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      setErrorMessage('Please log in first to use the AI Freshness Analyzer.');
-      return;
-    }
-
     // If the model is currently waking up, queue the file and inform the user
     if (!modelStatus.isReady && (modelStatus.isSleeping || modelStatus.isWaking)) {
       setQueuedFile(file);
@@ -124,13 +118,14 @@ const FreshnessAnalyzer = ({ onNavigate }) => {
     setErrorMessage('');
     setStatusNotice(null);
 
+    const token = localStorage.getItem('token');
+    const headers = { 'Content-Type': 'multipart/form-data' };
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
     try {
-      const response = await axios.post(`${baseURL}/freshness/analyze`, formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data'
-        }
-      });
+      const response = await axios.post(`${baseURL}/freshness/analyze`, formData, { headers });
 
       const results = response.data?.data?.analysisResults;
       if (!results) {
@@ -145,6 +140,35 @@ const FreshnessAnalyzer = ({ onNavigate }) => {
       setStatusNotice(null);
       setQueuedFile(null);
     } catch (error) {
+      // If token was invalid/expired (401), clean up stale token and auto-retry without bad auth
+      if (error.response?.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        localStorage.removeItem('userRole');
+
+        try {
+          const retryResponse = await axios.post(`${baseURL}/freshness/analyze`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+          });
+          const retryResults = retryResponse.data?.data?.analysisResults;
+          if (retryResults) {
+            setAnalysisResult({
+              freshness: retryResults.freshnessScore,
+              status: formatStatus(retryResults.status),
+              recommendations: Array.isArray(retryResults.recommendations) ? retryResults.recommendations : []
+            });
+            setStatusNotice(null);
+            setQueuedFile(null);
+            setErrorMessage('');
+            return;
+          }
+        } catch (retryErr) {
+          if (retryErr.response?.data) {
+            error = retryErr;
+          }
+        }
+      }
+
       const errorData = error.response?.data;
 
       // Handle eco-sleep / cold start response gracefully
